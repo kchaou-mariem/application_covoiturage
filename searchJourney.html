@@ -1,0 +1,68 @@
+<!Doctype html>
+<head>
+        <meta charset="UTF-8">
+
+</head>
+<body>
+    <form>
+        <h2>Rechercher un trajet</h2>
+        <label for="departure">Departure</label>
+        <input type="text" id="departure" placeholder="Departure">
+<br>
+        <label for="destination">Destination</label>
+        <input type="text" id="destination" placeholder="Destination">
+        <br>
+
+        <label for="date">Date</label>
+        <input type="date" id="date">
+        <br>
+
+        <label for="seats">seats available</label>
+        <input type="number" id="seats" name="seats" min="0" max="4" required>
+        <br>
+
+        <h3 >+ Ajout préférence</h3>
+        <label><input type="checkbox" name="options" value="air_conditioning"> Air Conditioning</label>
+        <br>
+
+        <label><input type="checkbox" name="options" value="smoking"> Smoking</label>
+        <br>
+
+        <label><input type="checkbox" name="options" value="luggage"> Luggage</label>
+        <br>
+
+        <label>Gender of Driver </label>
+            <label><input type="radio" name="driverGender" value="male"> Male</label>
+            <label><input type="radio" name="driverGender" value="female"> Female</label>   
+<br>
+
+        <label><input type="checkbox" name="options" value="stops"> Stops</label>
+        <br>
+
+        <label><input type="checkbox" name="options" value="pets"> Pets</label>
+<br>
+
+<button type="submit">Search</button>
+        <!--
+        <h3 id="openModal">+ Ajout préférence</h3>
+        <button type="submit">Search</button>
+
+        <div id="preferencesModal" class="modal">
+        <div class="modal-content">
+            <span class="close" id="closeModal"></span>
+            <h3>Préférences</h3>
+
+            <label><input type="checkbox" name="options" value="climatisation"> Climatisation</label>
+            <label><input type="checkbox" name="options" value="fumeur"> Fumeur</label>
+            <label><input type="checkbox" name="options" value="bagage"> Bagage</label>
+            <label><input type="checkbox" name="options" value="chauffeur"> Chauffeur</label>
+            <label><input type="checkbox" name="options" value="arrets"> Arrêts</label>
+            <label><input type="checkbox" name="options" value="animaux"> Animaux</label>
+
+            <button type="button" id="closeBtn">Fermer</button>
+        </div>
+    </div>
+-->
+    </form>
+</body>
+</html>
