@@ -1,17 +1,40 @@
+<?php
+include 'connexion.php';
+?>
 <!Doctype html>
 <head>
         <meta charset="UTF-8">
 
+
 </head>
 <body>
+
     <form>
         <h2>Rechercher un trajet</h2>
         <label for="departure">Departure</label>
-        <input type="text" id="departure" placeholder="Departure">
-<br>
-        <label for="destination">Destination</label>
-        <input type="text" id="destination" placeholder="Destination">
+        <select name="departure_city" id="departure_city" required>
+            <option value="">-- Choose city --</option>
+                <?php
+                $cities = $conn->query("SELECT * FROM city ORDER BY name");
+                while ($row = $cities->fetch_assoc()) {
+                    echo "<option value='{$row['idCity']}'>{$row['name']}</option>";
+                }
+                ?>
+        </select>
+        
         <br>
+        <label for="destination">Destination</label>
+        <select name="destination_city" id="destination_city" required>
+            <option value="">-- Choose city --</option>
+                <?php
+                $cities = $conn->query("SELECT * FROM city ORDER BY name");
+                while ($row = $cities->fetch_assoc()) {
+                    echo "<option value='{$row['idCity']}'>{$row['name']}</option>";
+                }
+                ?>
+        </select>
+
+                <br>
 
         <label for="date">Date</label>
         <input type="date" id="date">
@@ -43,26 +66,7 @@
 <br>
 
 <button type="submit">Search</button>
-        <!--
-        <h3 id="openModal">+ Ajout préférence</h3>
-        <button type="submit">Search</button>
-
-        <div id="preferencesModal" class="modal">
-        <div class="modal-content">
-            <span class="close" id="closeModal"></span>
-            <h3>Préférences</h3>
-
-            <label><input type="checkbox" name="options" value="climatisation"> Climatisation</label>
-            <label><input type="checkbox" name="options" value="fumeur"> Fumeur</label>
-            <label><input type="checkbox" name="options" value="bagage"> Bagage</label>
-            <label><input type="checkbox" name="options" value="chauffeur"> Chauffeur</label>
-            <label><input type="checkbox" name="options" value="arrets"> Arrêts</label>
-            <label><input type="checkbox" name="options" value="animaux"> Animaux</label>
-
-            <button type="button" id="closeBtn">Fermer</button>
-        </div>
-    </div>
--->
+      
     </form>
 </body>
 </html>
