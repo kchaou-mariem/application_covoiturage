@@ -9,7 +9,7 @@ include 'connexion.php';
 </head>
 <body>
 
-    <form>
+    <form action="search_journey_action.php" method="POST">
         <h2>Rechercher un trajet</h2>
         <label for="departure">Departure</label>
         <select name="departure_city" id="departure_city" required>
@@ -37,7 +37,7 @@ include 'connexion.php';
                 <br>
 
         <label for="date">Date</label>
-        <input type="date" id="date">
+        <input type="date" id="date" name="date">
         <br>
 
         <label for="seats">seats available</label>
@@ -45,28 +45,32 @@ include 'connexion.php';
         <br>
 
         <h3 >+ Ajout préférence</h3>
-        <label><input type="checkbox" name="options" value="air_conditioning"> Air Conditioning</label>
+         <?php
+        $prefs = $conn->query("SELECT * FROM preferences ORDER BY label");
+        while ($p = $prefs->fetch_assoc()) {
+            echo "<label><input type='checkbox' name='preferences[]' value='{$p['label']}'> {$p['label']}</label><br>";
+        }
+        ?>
+
         <br>
 
-        <label><input type="checkbox" name="options" value="smoking"> Smoking</label>
-        <br>
+        <!--<label>Gender of Driver</label><br>
+        <label><input type="radio" name="driverGender" value="male"> Male</label>
+        <label><input type="radio" name="driverGender" value="female"> Female</label>
+        <br><br>-->
 
-        <label><input type="checkbox" name="options" value="luggage"> Luggage</label>
-        <br>
 
-        <label>Gender of Driver </label>
-            <label><input type="radio" name="driverGender" value="male"> Male</label>
-            <label><input type="radio" name="driverGender" value="female"> Female</label>   
-<br>
-
-        <label><input type="checkbox" name="options" value="stops"> Stops</label>
-        <br>
-
-        <label><input type="checkbox" name="options" value="pets"> Pets</label>
-<br>
-
-<button type="submit">Search</button>
+  <input type="submit" name="search" value="Search Journey">
       
     </form>
+
+    <hr>
+
+<?php
+if (isset($_POST['search'])) {
+    include 'search_journey_action.php';
+}
+?>
+
 </body>
 </html>
