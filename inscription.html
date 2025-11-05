@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inscription</title>
+
+    <script>
+    function validateForm() {
+        const password = document.querySelector('input[name="password"]');
+        const confirmPassword = document.querySelector('input[name="confirmPassword"]');
+        
+        if (password.value !== confirmPassword.value) {
+            alert("Les mots de passe ne correspondent pas");
+            return false;
+        }
+        
+        return true;
+    }
+    </script>
+    
+</head>
+<body>
+    <form method="post" action="inscription.php">
+        <label for="firstName">Name</label>
+        <input type="text" id="firstName" name="firstName" required
+        pattern="[a-zA-ZÀ-ÿ\-\s]{2,50}"
+        title="2-50 caracters, only letters, spaces and hyphens allowed">
+        <span class="error-message" id="firstNameError"></span>
+    
+        <br>
+
+        <label for="lastName">Last name</label>
+        <input type="text" id="lastName" name="lastName" required
+        pattern="[a-zA-ZÀ-ÿ\-\s]{2,50}"
+        title="2-50 caracters, only letters, spaces and hyphens allowed">
+        <span class="error-message" id="lastNameError"></span>
+        
+        <br>
+
+        <label for="email">Email</label>
+        <input type="email" id="email" name="email" required>
+        <span class="error-message" id="emailError"></span>
+        
+        <br>
+    
+        <label for="phone">Phone number</label>
+        <input type="tel" id="phone" name="phone"
+        pattern="[23459][0-9]{7}"
+        title="8 digits required">
+
+        <span class="error-message" id="phoneError"></span>
+        
+        <br>
+
+        <label for="phone">National idendity card number</label>
+        <input type="text" id="cin" name="cin"
+        pattern="[01][0-9]{7}"
+        title="8 digits required starts with 0 or 1">
+
+        <span class="error-message" id="cinError"></span>
+            
+        <br>
+
+        <p for="gender">Gender</p>
+        <label>
+            <input type="radio" name="gender" value="male">Male
+        </label><br>
+        <label>
+            <input type="radio" name="gender" value="female">Female
+        </label><br>
+
+            <label for="password">Password</label>
+            <input type="password" id="password" name="password" required
+            minlength="8"
+            pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$"
+            title="8 caracters min, at least one uppercase letter, one lowercase letter and one number">
+            <span class="error-message" id="passwordError"></span>
+
+            <!--div class="password-strength">
+                <div class="strength-bar">
+                    <div class="strength-fill" id="strengthFill"></div>
+                </div>
+                <span class="strength-text" id="strengthText">Faible</span>
+            </div-->
+        
+            <label for="confirmPassword">Password confirmation</label>
+            <input type="password" id="confirmPassword" name="confirmPassword" required>
+            <span class="error-message" id="confirmPasswordError"></span>
+        
+            <label class="checkbox-container">
+                <input type="checkbox" id="terms" required>
+                <span class="checkmark"></span>
+                I accept <a href="#" class="link">the terms of use</a>
+            </label>
+        
+        <button type="submit" class="btn btn-primary btn-full">Create account</button>
+    </form>
+    
+</body>
+</html>
