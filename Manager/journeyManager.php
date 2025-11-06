@@ -1,5 +1,5 @@
 <?php
-
+require_once __DIR__ . '/../Entity/journey.php';
 class JourneyManager {
     private $conn;
 
@@ -196,5 +196,54 @@ $stmt->bind_param(
 
         return $journey;
     }
+
+    // 🔍 Recherche des trajets selon critères
+public function searchJourneys($departure, $destination, $date = null, $seats = 0, $preferences = []) {
+    $sql = "SELECT j.*,
+               c1.name AS departure_city_name,
+               c2.name AS destination_city_name,
+               d1.name AS departure_delegation_name,
+               d2.name AS destination_delegation_name
+        FROM journey j
+        LEFT JOIN city c1 ON j.departure = c1.idCity
+        LEFT JOIN city c2 ON j.destination = c2.idCity
+        LEFT JOIN delegation d1 ON j.departureDelegation = d1.idDelegation
+        LEFT JOIN delegation d2 ON j.destinationDelegation = d2.idDelegation
+        WHERE j.departure = ? AND j.destination = ?";
+    $params = [$departure, $destination];
+    $types = "ii";
+
+    if (!empty($date)) {
+        $sql .= " AND j.depDate >= ?";
+        $params[] = $date;
+        $types .= "s";
+    }
+
+    if (!empty($seats)) {
+        $sql .= " AND j.nbSeats >= ?";
+        $params[] = $seats;
+        $types .= "i";
+    }
+
+    $stmt = $this->conn->prepare($sql);
+    $stmt->bind_param($types, ...$params);
+    $stmt->execute();
+    $result = $stmt->get_result();
+
+    $journeys = [];
+    while ($data = $result->fetch_assoc()) {
+        $journey = $this->hydrateJourney($data);
+        // Optionnel : filtrer par préférences
+        if (!empty($preferences)) {
+            $journeyPrefs = $journey->getPreferencesArray();
+            $match = !array_diff($preferences, $journeyPrefs);
+            if (!$match) continue;
+        }
+        $journeys[] = $journey;
+    }
+
+    return $journeys;
+}
+
 }
 ?>
