@@ -1,4 +1,7 @@
 <?php
+require_once __DIR__ . '/../Entity/city.php';
+
+
 // Use a reliable path based on this file's directory to include the City entity
 require_once __DIR__ . '/../Entity/city.php';
 class CityManager {

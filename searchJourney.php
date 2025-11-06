@@ -1,74 +1,109 @@
 <?php
-include 'connexion.php';
+require_once 'connexion.php';
+require_once 'Manager/JourneyManager.php';
+require_once 'Manager/CityManager.php';
+require_once 'Manager/PreferenceManager.php';
+require_once 'Manager/CarManager.php';
+
+// Initialisation des managers
+$cityManager = new CityManager($conn);
+$prefManager = new PreferenceManager($conn);
+$journeyManager = new JourneyManager($conn);
+
+$cities = $cityManager->findAll();
+$prefs = $prefManager->findAll();
 ?>
-<!Doctype html>
+
+<!DOCTYPE html>
+<html lang="en">
 <head>
-        <meta charset="UTF-8">
-
-
+    <meta charset="UTF-8">
+    <title>Search Journey</title>
 </head>
 <body>
 
-    <form action="search_journey_action.php" method="POST">
-        <h2>Rechercher un trajet</h2>
-        <label for="departure">Departure</label>
-        <select name="departure_city" id="departure_city" required>
-            <option value="">-- Choose city --</option>
-                <?php
-                $cities = $conn->query("SELECT * FROM city ORDER BY name");
-                while ($row = $cities->fetch_assoc()) {
-                    echo "<option value='{$row['idCity']}'>{$row['name']}</option>";
-                }
-                ?>
-        </select>
-        
-        <br>
-        <label for="destination">Destination</label>
-        <select name="destination_city" id="destination_city" required>
-            <option value="">-- Choose city --</option>
-                <?php
-                $cities = $conn->query("SELECT * FROM city ORDER BY name");
-                while ($row = $cities->fetch_assoc()) {
-                    echo "<option value='{$row['idCity']}'>{$row['name']}</option>";
-                }
-                ?>
-        </select>
+<form method="POST">
+    <h2>Search for a Journey</h2>
 
-                <br>
+    <label for="departure_city">Departure:</label>
+    <select name="departure_city" id="departure_city" required>
+        <option value="">-- Choose city --</option>
+        <?php foreach ($cities as $city): ?>
+            <option value="<?= $city->getIdCity(); ?>"><?= htmlspecialchars($city->getName()); ?></option>
+        <?php endforeach; ?>
+    </select>
 
-        <label for="date">Date</label>
-        <input type="date" id="date" name="date">
-        <br>
+    <br>
 
-        <label for="seats">seats available</label>
-        <input type="number" id="seats" name="seats" min="0" max="4" required>
-        <br>
+    <label for="destination_city">Destination:</label>
+    <select name="destination_city" id="destination_city" required>
+        <option value="">-- Choose city --</option>
+        <?php foreach ($cities as $city): ?>
+            <option value="<?= $city->getIdCity(); ?>"><?= htmlspecialchars($city->getName()); ?></option>
+        <?php endforeach; ?>
+    </select>
 
-        <h3 >+ Ajout préférence</h3>
-         <?php
-        $prefs = $conn->query("SELECT * FROM preferences ORDER BY label");
-        while ($p = $prefs->fetch_assoc()) {
-            echo "<label><input type='checkbox' name='preferences[]' value='{$p['label']}'> {$p['label']}</label><br>";
-        }
-        ?>
+    <br>
 
-        <br>
+    <label for="date">Date:</label>
+    <input type="date" id="date" name="date">
+    <br>
 
-        <!--<label>Gender of Driver</label><br>
-        <label><input type="radio" name="driverGender" value="male"> Male</label>
-        <label><input type="radio" name="driverGender" value="female"> Female</label>
-        <br><br>-->
+    <label for="seats">Seats available:</label>
+    <input type="number" id="seats" name="seats" min="1" max="9">
+    <br>
 
+    <h3>+ Preferences</h3>
+    <?php foreach ($prefs as $pref): ?>
+        <label>
+            <input type="checkbox" name="preferences[]" value="<?= htmlspecialchars($pref->getLabel()); ?>">
+            <?= htmlspecialchars($pref->getLabel()); ?>
+        </label><br>
+    <?php endforeach; ?>
 
-  <input type="submit" name="search" value="Search Journey">
-      
-    </form>
+    <br>
+    <input type="submit" name="search" value="Search Journey">
+</form>
 
-    <hr>
+<hr>
 
 <?php
 if (isset($_POST['search'])) {
-    include 'search_journey_action.php';
+    $departure = $_POST['departure_city'] ?? '';
+    $destination = $_POST['destination_city'] ?? '';
+    $date = $_POST['date'] ?? '';
+    $seats = $_POST['seats'] ?? 0;
+    $preferences = $_POST['preferences'] ?? [];
+
+    if ($departure == $destination) {
+        echo "<p style='color:red;'>Departure and destination must be different.</p>";
+    } else {
+        // 🔍 On appelle une méthode de recherche dans le JourneyManager
+        $journeys = $journeyManager->searchJourneys($departure, $destination, $date, $seats, $preferences);
+
+        if (!empty($journeys)) {
+            echo "<h3>Results:</h3>";
+            foreach ($journeys as $j) {
+                echo "<p><strong>From:</strong> {$j->departure_city_name} {$j->departure_delegation_name}  → <strong>To:</strong>{$j->destination_city_name} {$j->destination_delegation_name}<br>";
+                echo "<strong>Date:</strong> {$j->getDepDate()} {$j->getDepTime()}<br>";
+                echo "<strong>Available Seats:</strong> {$j->getNbSeats()}<br>";
+                echo "<strong>Price:</strong> {$j->getPrice()} DT<br>";
+
+                if (!empty($j->getImmatCar())) {
+                    echo "<strong>Car:</strong> {$j->getImmatCar()}<br>";
+                }
+
+                $prefs = $j->getPreferencesArray();
+                if (!empty($prefs)) {
+                    echo "<strong>Preferences:</strong> " . implode(', ', $prefs) . "<br>";
+                }
+
+                echo "</p><hr>";
+            }
+        } else {
+            echo "<p>No journeys found matching your criteria.</p>";
+        }
+    }
 }
 ?>
 

@@ -1,5 +1,5 @@
 <?php
-
+require_once __DIR__ . '/../Entity/delegation.php';
 class DelegationManager {
     private $conn;
 

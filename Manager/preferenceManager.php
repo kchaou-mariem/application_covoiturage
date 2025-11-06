@@ -1,15 +1,16 @@
 <?php
+require_once __DIR__ . '/../Entity/preference.php';
 
 class PreferenceManager {
-    private $db;
+    private $conn;
     
-    public function __construct($db) {
-        $this->db = $db;
+    public function __construct($conn) {
+        $this->conn = $conn;
     }
     
     // Créer une préférence
     public function create(Preference $preference) {
-        $stmt = $this->db->prepare("INSERT INTO preferences (label) VALUES (?)");
+        $stmt = $this->conn->prepare("INSERT INTO preferences (label) VALUES (?)");
         $label = $preference->getLabel();
         $stmt->bind_param("s", $label);
         return $stmt->execute();
@@ -17,7 +18,7 @@ class PreferenceManager {
     
     // Lire une préférence par ID
     public function read($idPref) {
-        $stmt = $this->db->prepare("SELECT * FROM preferences WHERE idPref = ?");
+        $stmt = $this->conn->prepare("SELECT * FROM preferences WHERE idPref = ?");
         $stmt->bind_param("i", $idPref);
         $stmt->execute();
         $result = $stmt->get_result();
@@ -30,7 +31,7 @@ class PreferenceManager {
     
     // Mettre à jour une préférence
     public function update(Preference $preference) {
-        $stmt = $this->db->prepare("UPDATE preferences SET label = ? WHERE idPref = ?");
+        $stmt = $this->conn->prepare("UPDATE preferences SET label = ? WHERE idPref = ?");
         $label = $preference->getLabel();
         $idPref = $preference->getIdPref();
         $stmt->bind_param("si", $label, $idPref);
@@ -39,14 +40,14 @@ class PreferenceManager {
     
     // Supprimer une préférence
     public function delete($idPref) {
-        $stmt = $this->db->prepare("DELETE FROM preferences WHERE idPref = ?");
+        $stmt = $this->conn->prepare("DELETE FROM preferences WHERE idPref = ?");
         $stmt->bind_param("i", $idPref);
         return $stmt->execute();
     }
     
     // Récupérer toutes les préférences
     public function findAll() {
-        $result = $this->db->query("SELECT * FROM preferences ORDER BY label");
+        $result = $this->conn->query("SELECT * FROM preferences ORDER BY label");
         $preferences = [];
         
         while ($data = $result->fetch_assoc()) {
@@ -57,7 +58,7 @@ class PreferenceManager {
     
     // Rechercher par label
     public function findByLabel($label) {
-        $stmt = $this->db->prepare("SELECT * FROM preferences WHERE label LIKE ?");
+        $stmt = $this->conn->prepare("SELECT * FROM preferences WHERE label LIKE ?");
         $like = "%" . $label . "%";
         $stmt->bind_param("s", $like);
         $stmt->execute();
@@ -72,7 +73,7 @@ class PreferenceManager {
     
     // Compter le nombre total de préférences
     public function count() {
-        $result = $this->db->query("SELECT COUNT(*) AS total FROM preferences");
+        $result = $this->conn->query("SELECT COUNT(*) AS total FROM preferences");
         $row = $result->fetch_assoc();
         return $row['total'];
     }
