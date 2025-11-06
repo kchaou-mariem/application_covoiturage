@@ -33,7 +33,7 @@ function connectToDatabase() {
     $server = "localhost";
     $username = "root";
     $password = "";
-    $database = "covoiturage";
+    $database = "covoiturages";
     
     $mysqli = mysqli_connect($server, $username, $password);
     if (!$mysqli) {

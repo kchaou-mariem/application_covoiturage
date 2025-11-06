@@ -24,15 +24,15 @@ class JourneyManager {
         }
 
    $price = $journey->getPrice();
-$nbSeats = $journey->getNbSeats();
-$depDate = $journey->getDepDate();
-$depTime = $journey->getDepTime();
-$departure = $journey->getDeparture();
-$destination = $journey->getDestination();
-$departureDelegation = $journey->getDepartureDelegation();
-$destinationDelegation = $journey->getDestinationDelegation();
-$immatCar = $journey->getImmatCar();
-$preferences = $journey->getPreferences();
+    $nbSeats = $journey->getNbSeats();
+    $depDate = $journey->getDepDate();
+    $depTime = $journey->getDepTime();
+    $departure = $journey->getDeparture();
+    $destination = $journey->getDestination();
+    $departureDelegation = $journey->getDepartureDelegation();
+    $destinationDelegation = $journey->getDestinationDelegation();
+    $immatCar = $journey->getImmatCar();
+    $preferences = $journey->getPreferences();
 
 $stmt->bind_param(
     "sdssssssss",

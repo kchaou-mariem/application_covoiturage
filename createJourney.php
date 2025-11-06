@@ -1,5 +1,5 @@
 <?php
-require_once 'connexion.php';
+require_once 'config/connexion.php';
 require_once 'Entity/City.php';
 require_once 'Entity/Delegation.php';
 require_once 'Entity/Car.php';
