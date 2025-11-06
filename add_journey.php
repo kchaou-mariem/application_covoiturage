@@ -16,7 +16,7 @@ if (isset($_GET['immat'])) {
     $data = $result->fetch_assoc();
 
     header('Content-Type: application/json; charset=utf-8');// Important pour indiquer que la réponse est en JSON
-    echo json_encode($data ?: new stdClass()); // renvoie {} si pas trouvé
+    echo json_encode($data ?: new stdClass()); // renvoie {} si pas trouvé //stdClass: classe vide en PHP
     exit; // très important : stoppe l'exécution pour ne pas envoyer du HTML ensuite
 }
 

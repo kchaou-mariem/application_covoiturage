@@ -24,7 +24,9 @@ $sql = "SELECT j.*,
         WHERE j.departure = '$departure' 
           AND j.destination = '$destination'";
 
-if (!empty($date)) {
+
+//Si l’utilisateur a renseigné une date ou un nombre de sièges, on ajoute ces conditions à la requête.
+if (!empty($date)) { 
     $sql .= " AND j.depDate >= '$date'";
 }
 if (!empty($seats)) {
@@ -57,7 +59,7 @@ if (mysqli_num_rows($result) > 0) {
             $prefs = json_decode($row['preferences'], true);
             if (is_array($prefs)) {
                 foreach ($prefs as $key => $val) {
-                    echo "- $key: $val<br>";
+                    echo "- $val<br>";
                 }
             } else {
                 echo $row['preferences'] . "<br>";
