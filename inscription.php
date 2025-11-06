@@ -106,7 +106,7 @@ function connectToDatabase() {
     }
     
     // Select database
-    if (!mysqli_select_db($mysqli, "covoiturages")) {
+    if (!mysqli_select_db($mysqli, "covoiturage")) {
         die("Database not found: " . mysqli_error($mysqli));
     }
     

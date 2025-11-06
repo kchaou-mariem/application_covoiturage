@@ -23,11 +23,16 @@ class Delegation {
     public function setName($name) {
         $this->name = $name;
     }
+
+    public function setIdDelegation($id) {
+        $this->idDelegation = $id;
+    }
     
     // Méthode pour afficher l'objet
     public function __toString() {
         return "Delegation [ID: " . $this->idDelegation . ", Name: " . $this->name . "]";
     }
+
     
     // Validation des données
     public function isValid() {

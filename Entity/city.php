@@ -22,8 +22,15 @@ class City {
     // Setters
     public function setName($name) {
         $this->name = $name;
+        
     }
     
+    // Setter for the ID - used after inserting to populate the entity
+    public function setIdCity($id) {
+        $this->idCity = $id;
+    }
+
+ 
     // Méthode pour afficher l'objet
     public function __toString() {
         return "City [ID: " . $this->idCity . ", Name: " . $this->name . "]";

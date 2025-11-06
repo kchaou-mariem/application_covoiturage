@@ -12,6 +12,12 @@ class Journey {
     private $destinationDelegation;
     private $immatCar;
     private $preferences;
+
+     // ✅ Ajoute ces attributs optionnels pour les jointures
+    public $departure_city_name;
+    public $destination_city_name;
+    public $departure_delegation_name;
+    public $destination_delegation_name;
     
     // Constructeur
     public function __construct(
@@ -86,6 +92,11 @@ class Journey {
     }
     
     // Setters
+
+    public function setIdJourney($idJourney) {
+        $this->idJourney = $idJourney;
+    }
+
     public function setPrice($price) {
         $this->price = $price;
     }
@@ -135,19 +146,29 @@ class Journey {
         return $this->nbSeats <= 0;
     }
     
-    public function isValid() {
-        return !empty($this->price) && 
-               !empty($this->nbSeats) && 
-               !empty($this->depDate) && 
-               !empty($this->depTime) && 
-               ($this->departure !== null || $this->departureDelegation !== null) &&
-               ($this->destination !== null || $this->destinationDelegation !== null) &&
-               !empty($this->immatCar) &&
-               $this->price >= 0 &&
-               $this->nbSeats >= 1 &&
-               $this->nbSeats <= 9; // Maximum 9 sièges pour une voiture
-    }
-    
+   public function isValid() {
+    return 
+        !empty($this->price) &&
+        !empty($this->nbSeats) &&
+        !empty($this->depDate) &&
+        !empty($this->depTime) &&
+
+        !empty($this->departure) &&
+        !empty($this->departureDelegation) &&
+
+        !empty($this->destination) &&
+        !empty($this->destinationDelegation) &&
+
+        $this->destination !== $this->departure &&
+
+        strtotime($this->depDate) >= strtotime(date("Y-m-d")) &&
+
+        !empty($this->immatCar) &&
+        $this->price >= 0 &&
+        $this->nbSeats >= 1 &&
+        $this->nbSeats <= 9;
+}
+
     // Gestion des préférences JSON
     public function setPreferencesArray($preferencesArray) {
         $this->preferences = json_encode($preferencesArray, JSON_UNESCAPED_UNICODE);
@@ -181,6 +202,8 @@ class Journey {
         $preferences = $this->getPreferencesArray();
         return in_array($preferenceId, $preferences);
     }
+
+    
     
     // Méthode pour afficher l'objet
     public function __toString() {
