@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/../Entity/car.php';
 class CarManager {
     private $conn;
 
@@ -18,10 +19,10 @@ class CarManager {
 
         $stmt = $this->conn->prepare("INSERT INTO car (immat, model, color, seats) VALUES (?, ?, ?, ?)");
         $immat = $car->getImmat();
-    $model = $car->getModel();
-    $color = $car->getColor();
-    $seats = $car->getSeats();
-    $stmt->bind_param("sssi", $immat, $model, $color, $seats);
+        $model = $car->getModel();
+        $color = $car->getColor();
+        $seats = $car->getSeats();
+        $stmt->bind_param("sssi", $immat, $model, $color, $seats);
 
         if (!$stmt->execute()) {
             throw new Exception("Erreur lors de l'ajout de la voiture : " . $stmt->error);
@@ -101,14 +102,27 @@ class CarManager {
     }
 
     // Vérifier existence par immatriculation
+    // public function existsByImmat($immat) {
+    //     $stmt = $this->conn->prepare("SELECT COUNT(*) FROM car WHERE immat = ?");
+    //     $stmt->bind_param("s", $immat);
+    //     $stmt->execute();
+    //     $stmt->bind_result($count);
+    //     $stmt->fetch();
+    //     return $count > 0;
+    // }
     public function existsByImmat($immat) {
-        $stmt = $this->conn->prepare("SELECT COUNT(*) FROM car WHERE immat = ?");
-        $stmt->bind_param("s", $immat);
-        $stmt->execute();
-        $stmt->bind_result($count);
-        $stmt->fetch();
-        return $count > 0;
-    }
+    $stmt = $this->conn->prepare("SELECT 1 FROM car WHERE immat = ? LIMIT 1");
+    $stmt->bind_param("s", $immat);
+    $stmt->execute();
+
+    $stmt->store_result(); // nécessaire pour num_rows
+
+    $exists = $stmt->num_rows > 0;
+
+    $stmt->close();
+    return $exists;
+}
+
 
     // Hydrater un objet Car depuis un tableau
     private function hydrateCar($data) {

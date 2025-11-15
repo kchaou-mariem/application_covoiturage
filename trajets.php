@@ -283,7 +283,9 @@ $cities = $cityManager->findAll();
                                             <i class="fas fa-sign-in-alt me-2"></i> Se connecter pour réserver
                                         </a>
                                     <?php endif; ?>
-                                    
+                                    <a href="cart.php?add=<?= $journey->getIdJourney() ?>" class="btn btn-warning">
+                                        <i class="fas fa-cart-plus"></i> Ajouter au panier
+                                    </a>
                                     <button class="btn btn-outline-info" 
                                             onclick="afficherDetails(<?= $journey->getIdJourney() ?>)">
                                         <i class="fas fa-info-circle me-2"></i> Plus de détails

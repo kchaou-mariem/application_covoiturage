@@ -97,6 +97,9 @@ if (isset($_POST['search'])) {
                 if (!empty($prefs)) {
                     echo "<strong>Preferences:</strong> " . implode(', ', $prefs) . "<br>";
                 }
+                echo "<a href='cart.php?add={$j->getIdJourney()}'>
+                        <button>Ajouter au panier</button>
+                    </a>";
 
                 echo "</p><hr>";
             }
