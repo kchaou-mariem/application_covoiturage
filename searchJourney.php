@@ -1,5 +1,5 @@
 <?php
-require_once 'connexion.php';
+require_once 'config/connexion.php';
 require_once 'Manager/JourneyManager.php';
 require_once 'Manager/CityManager.php';
 require_once 'Manager/PreferenceManager.php';
