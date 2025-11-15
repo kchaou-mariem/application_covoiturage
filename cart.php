@@ -10,9 +10,22 @@ if (!isset($_SESSION['cart'])) {
 // --- 2) AJOUTER UN TRAJET ---
 if (isset($_GET['add'])) {
     $id = intval($_GET['add']);
-    if (!in_array($id, $_SESSION['cart'])) {
+
+    // Vérifier le nombre de places restantes
+    $stmt = $conn->prepare("SELECT nbSeats FROM journey WHERE idJourney = ?");
+    $stmt->bind_param("i", $id);
+    $stmt->execute();
+    $stmt->bind_result($seatsRemaining);
+    $stmt->fetch();
+    $stmt->close();
+
+    if ($seatsRemaining <= 0) {
+        $_SESSION['error'] = "Sorry, this journey is fully booked.";
+    } elseif (!in_array($id, $_SESSION['cart'])) {
         $_SESSION['cart'][] = $id; // Ajout du trajet au panier
+        $_SESSION['success'] = "Journey added to cart successfully.";
     }
+
     header("Location: cart.php");
     exit();
 }
@@ -20,7 +33,7 @@ if (isset($_GET['add'])) {
 // --- 3) SUPPRIMER UN TRAJET ---
 if (isset($_GET['remove'])) {
     $id = intval($_GET['remove']);
-    $_SESSION['cart'] = array_filter($_SESSION['cart'], fn($x) => $x != $id);//Garde uniquement les éléments différents de l'ID à supprimer // fn est une fonction fléchée PHP 7.4+ // $x représente chaque élément du tableau
+    $_SESSION['cart'] = array_filter($_SESSION['cart'], fn($x) => $x != $id);
     header("Location: cart.php");
     exit();
 }
@@ -29,16 +42,26 @@ if (isset($_GET['remove'])) {
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>Panier</title>
+    <title>Shopping Cart</title>
 </head>
 <body>
 
-<h1>Votre panier</h1>
+<h1>Your Cart</h1>
 
 <?php
+if (!empty($_SESSION['error'])) {
+    echo "<p style='color:red;'>".$_SESSION['error']."</p>";
+    unset($_SESSION['error']);
+}
+
+if (!empty($_SESSION['success'])) {
+    echo "<p style='color:green;'>".$_SESSION['success']."</p>";
+    unset($_SESSION['success']);
+}
+
 // --- 4) AFFICHAGE DU PANIER ---
 if (empty($_SESSION['cart'])) {
-    echo "<p>Votre panier est vide.</p>";
+    echo "<p>Your cart is empty.</p>";
     exit();
 }
 
@@ -56,12 +79,13 @@ $res = $conn->query($sql);
 while ($row = $res->fetch_assoc()):
 ?>
     <div style="border:1px solid #ccc; padding:10px; margin:10px;">
-        <strong><?= $row['departure_city'] ?> → <?= $row['destination_city'] ?></strong><br>
-        Date : <?= $row['depDate'] ?> à <?= $row['depTime'] ?><br>
-        Prix : <?= $row['price'] ?> DT<br>
+        <strong><?= htmlspecialchars($row['departure_city']) ?> → <?= htmlspecialchars($row['destination_city']) ?></strong><br>
+        Date : <?= $row['depDate'] ?> at <?= substr($row['depTime'],0,5) ?><br>
+        Price : <?= $row['price'] ?> DT<br>
+        Available Seats: <?= $row['nbSeats'] ?><br>
 
         <a href="cart.php?remove=<?= $row['idJourney'] ?>">
-            <button>Retirer</button>
+            <button>Remove</button>
         </a>
     </div>
 <?php endwhile; ?>
@@ -69,20 +93,12 @@ while ($row = $res->fetch_assoc()):
 <form action="checkout.php" method="POST">
 <?php foreach ($_SESSION['cart'] as $jid): ?>
     <label>Seats for journey <?= $jid ?>:</label>
-    <input type="number" name="seats_<?= $jid ?>" min="1" required>
+    <input type="number" name="seats_<?= $jid ?>" min="1" max="<?= $row['nbSeats'] ?>" required>
     <br><br>
 <?php endforeach; ?>
 
-<button type="submit">Payer</button>
+<button type="submit">Pay</button>
 </form>
-
-
-<!-- <?php $cartIds = implode(",", $_SESSION['cart']); ?>
-
-<a href="checkout.php?cart=<?= $cartIds ?>">
-    <button>Payer</button>
-</a> -->
-
 
 </body>
 </html>

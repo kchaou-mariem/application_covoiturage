@@ -19,6 +19,12 @@ $prefs = $prefManager->findAll();
 <head>
     <meta charset="UTF-8">
     <title>Search Journey</title>
+    <style>
+        .status-available { color: green; font-weight: bold; }
+        .status-full { color: red; font-weight: bold; }
+        .btn-disabled { background-color: gray; color: white; border: none; padding: 5px 10px; cursor: not-allowed; }
+        .btn-active { background-color: #f0ad4e; color: white; border: none; padding: 5px 10px; cursor: pointer; }
+    </style>
 </head>
 <body>
 
@@ -32,7 +38,6 @@ $prefs = $prefManager->findAll();
             <option value="<?= $city->getIdCity(); ?>"><?= htmlspecialchars($city->getName()); ?></option>
         <?php endforeach; ?>
     </select>
-
     <br>
 
     <label for="destination_city">Destination:</label>
@@ -42,7 +47,6 @@ $prefs = $prefManager->findAll();
             <option value="<?= $city->getIdCity(); ?>"><?= htmlspecialchars($city->getName()); ?></option>
         <?php endforeach; ?>
     </select>
-
     <br>
 
     <label for="date">Date:</label>
@@ -78,28 +82,40 @@ if (isset($_POST['search'])) {
     if ($departure == $destination) {
         echo "<p style='color:red;'>Departure and destination must be different.</p>";
     } else {
-        // 🔍 On appelle une méthode de recherche dans le JourneyManager
         $journeys = $journeyManager->searchJourneys($departure, $destination, $date, $seats, $preferences);
 
         if (!empty($journeys)) {
             echo "<h3>Results:</h3>";
             foreach ($journeys as $j) {
-                echo "<p><strong>From:</strong> {$j->departure_city_name} {$j->departure_delegation_name}  → <strong>To:</strong>{$j->destination_city_name} {$j->destination_delegation_name}<br>";
-                echo "<strong>Date:</strong> {$j->getDepDate()} {$j->getDepTime()}<br>";
-                echo "<strong>Available Seats:</strong> {$j->getNbSeats()}<br>";
-                echo "<strong>Price:</strong> {$j->getPrice()} DT<br>";
+                echo "<p>
+                        <strong>From:</strong> {$j->departure_city_name} {$j->departure_delegation_name} 
+                        → <strong>To:</strong> {$j->destination_city_name} {$j->destination_delegation_name}<br>
+                        <strong>Date:</strong> {$j->getDepDate()} {$j->getDepTime()}<br>
+                        <strong>Available Seats:</strong> {$j->getNbSeats()}<br>
+                        <strong>Price:</strong> {$j->getPrice()} DT<br>";
+
+                // Statut du trajet
+                if ($j->getNbSeats() > 0) {
+                    echo "<strong>Status:</strong> <span class='status-available'>Available</span><br>";
+                } else {
+                    echo "<strong>Status:</strong> <span class='status-full'>Full</span><br>";
+                }
 
                 if (!empty($j->getImmatCar())) {
                     echo "<strong>Car:</strong> {$j->getImmatCar()}<br>";
                 }
 
-                $prefs = $j->getPreferencesArray();
-                if (!empty($prefs)) {
-                    echo "<strong>Preferences:</strong> " . implode(', ', $prefs) . "<br>";
+                $prefsArray = $j->getPreferencesArray();
+                if (!empty($prefsArray)) {
+                    echo "<strong>Preferences:</strong> " . implode(', ', $prefsArray) . "<br>";
                 }
-                echo "<a href='cart.php?add={$j->getIdJourney()}'>
-                        <button>Ajouter au panier</button>
-                    </a>";
+
+                // Bouton Ajouter au panier
+                if ($j->getNbSeats() > 0) {
+                    echo "<a href='cart.php?add={$j->getIdJourney()}' class='btn-active'>Ajouter au panier</a>";
+                } else {
+                    echo "<button class='btn-disabled' disabled>Complet</button>";
+                }
 
                 echo "</p><hr>";
             }
