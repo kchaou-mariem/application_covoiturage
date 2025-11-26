@@ -28,6 +28,9 @@ class Journey {
     public $driver_email;
     public $driver_gender;
     public $driver_name;
+    // Car info from join
+    public $car_model;
+    public $car_immat;
     
     // Constructeur
     public function __construct(

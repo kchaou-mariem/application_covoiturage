@@ -108,8 +108,10 @@ if (isset($_POST['search'])) {
                     echo "<p><strong>Status:</strong> <span class='status-full'>Full</span></p>";
                 }
 
-                if (!empty($j->getImmatCar())) {
-                    echo "<p><strong>Car:</strong> " . htmlspecialchars($j->getImmatCar()) . "</p>";
+                if (!empty($j->car_model) || !empty($j->car_immat)) {
+                    $carModel = htmlspecialchars($j->car_model ?? '');
+                    $carImmat = !empty($j->car_immat) ? ' (' . htmlspecialchars($j->car_immat) . ')' : '';
+                    echo "<p><strong>Car:</strong> {$carModel}{$carImmat}</p>";
                 }
 
                 // Driver info (delegation and driver shown clearly)

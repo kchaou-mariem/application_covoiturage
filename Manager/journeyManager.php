@@ -66,19 +66,21 @@ class JourneyManager {
     // Lire un trajet
     public function read($idJourney) {
         $sql = "
-            SELECT j.*, 
-                   dep_city.name AS departure_city_name,
-                   dest_city.name AS destination_city_name,
-                   dep_del.name AS departure_delegation_name,
-                   dest_del.name AS destination_delegation_name
-                   , u.firstName AS driver_firstName, u.lastName AS driver_lastName, u.phone AS driver_phone, u.email AS driver_email, u.gender AS driver_gender
-            FROM journey j
-            LEFT JOIN city dep_city ON j.departure = dep_city.idCity
-            LEFT JOIN city dest_city ON j.destination = dest_city.idCity
-            LEFT JOIN delegation dep_del ON j.departureDelegation = dep_del.idDelegation
-            LEFT JOIN delegation dest_del ON j.destinationDelegation = dest_del.idDelegation
-            LEFT JOIN users u ON j.cinRequester = u.cin
-            WHERE j.idJourney = ?
+                 SELECT j.*, 
+                     dep_city.name AS departure_city_name,
+                     dest_city.name AS destination_city_name,
+                     dep_del.name AS departure_delegation_name,
+                     dest_del.name AS destination_delegation_name,
+                     car.model AS car_model, car.immat AS car_immat,
+                     u.firstName AS driver_firstName, u.lastName AS driver_lastName, u.phone AS driver_phone, u.email AS driver_email, u.gender AS driver_gender
+                 FROM journey j
+                 LEFT JOIN city dep_city ON j.departure = dep_city.idCity
+                 LEFT JOIN city dest_city ON j.destination = dest_city.idCity
+                 LEFT JOIN delegation dep_del ON j.departureDelegation = dep_del.idDelegation
+                 LEFT JOIN delegation dest_del ON j.destinationDelegation = dest_del.idDelegation
+                 LEFT JOIN car ON j.immatCar = car.immat
+                 LEFT JOIN users u ON j.cinRequester = u.cin
+                 WHERE j.idJourney = ?
         ";
 
         $stmt = $this->conn->prepare($sql);
@@ -152,14 +154,17 @@ class JourneyManager {
                    dep_city.name AS departure_city_name,
                    dest_city.name AS destination_city_name,
                    dep_del.name AS departure_delegation_name,
-                   dest_del.name AS destination_delegation_name
-                   , u.firstName AS driver_firstName, u.lastName AS driver_lastName, u.phone AS driver_phone, u.email AS driver_email, u.gender AS driver_gender
+                   dest_del.name AS destination_delegation_name,
+                   car.model AS car_model, car.immat AS car_immat,
+                   u.firstName AS driver_firstName, u.lastName AS driver_lastName, u.phone AS driver_phone, u.email AS driver_email, u.gender AS driver_gender
             FROM journey j
             LEFT JOIN city dep_city ON j.departure = dep_city.idCity
             LEFT JOIN city dest_city ON j.destination = dest_city.idCity
             LEFT JOIN delegation dep_del ON j.departureDelegation = dep_del.idDelegation
             LEFT JOIN delegation dest_del ON j.destinationDelegation = dest_del.idDelegation
+            LEFT JOIN car ON j.immatCar = car.immat
             LEFT JOIN users u ON j.cinRequester = u.cin
+            WHERE j.depDate > CURDATE()
             ORDER BY j.depDate DESC, j.depTime DESC
         ";
 
@@ -201,6 +206,10 @@ class JourneyManager {
         if (isset($data['departure_delegation_name'])) $journey->departure_delegation_name = $data['departure_delegation_name'];
         if (isset($data['destination_delegation_name'])) $journey->destination_delegation_name = $data['destination_delegation_name'];
 
+        // Car info if available
+        if (isset($data['car_model'])) $journey->car_model = $data['car_model'];
+        if (isset($data['car_immat'])) $journey->car_immat = $data['car_immat'];
+
         // Driver info if available
         if (isset($data['driver_firstName'])) $journey->driver_firstName = $data['driver_firstName'];
         if (isset($data['driver_lastName'])) $journey->driver_lastName = $data['driver_lastName'];
@@ -216,19 +225,21 @@ class JourneyManager {
 
     //  Recherche des trajets selon critères
 public function searchJourneys($departure, $destination, $date = null, $seats = 0, $preferences = []) {
-    $sql = "SELECT j.*,
-               c1.name AS departure_city_name,
-               c2.name AS destination_city_name,
-               d1.name AS departure_delegation_name,
-               d2.name AS destination_delegation_name
-         , u.firstName AS driver_firstName, u.lastName AS driver_lastName, u.phone AS driver_phone, u.email AS driver_email, u.gender AS driver_gender
-        FROM journey j
-        LEFT JOIN city c1 ON j.departure = c1.idCity
-        LEFT JOIN city c2 ON j.destination = c2.idCity
-        LEFT JOIN delegation d1 ON j.departureDelegation = d1.idDelegation
-        LEFT JOIN delegation d2 ON j.destinationDelegation = d2.idDelegation
-     LEFT JOIN users u ON j.cinRequester = u.cin
-        WHERE j.departure = ? AND j.destination = ?";
+     $sql = "SELECT j.*,
+                    c1.name AS departure_city_name,
+                    c2.name AS destination_city_name,
+                    d1.name AS departure_delegation_name,
+                    d2.name AS destination_delegation_name,
+                    car.model AS car_model, car.immat AS car_immat
+            , u.firstName AS driver_firstName, u.lastName AS driver_lastName, u.phone AS driver_phone, u.email AS driver_email, u.gender AS driver_gender
+          FROM journey j
+          LEFT JOIN city c1 ON j.departure = c1.idCity
+          LEFT JOIN city c2 ON j.destination = c2.idCity
+          LEFT JOIN delegation d1 ON j.departureDelegation = d1.idDelegation
+          LEFT JOIN delegation d2 ON j.destinationDelegation = d2.idDelegation
+      LEFT JOIN car ON j.immatCar = car.immat
+      LEFT JOIN users u ON j.cinRequester = u.cin
+        WHERE j.departure = ? AND j.destination = ? AND j.depDate > CURDATE()";
     $params = [$departure, $destination];
     $types = "ii";
 

@@ -267,11 +267,12 @@ $cities = $cityManager->findAll();
                                                     <?php endif; ?>
                                             </div>
                                         </div>
-                                        <?php if (isset($journey->car_brand)): ?>
+                                        <?php if (!empty($journey->car_model) || !empty($journey->car_immat)): ?>
                                             <div class="text-end">
                                                 <div class="fw-bold">Véhicule</div>
                                                 <div class="text-muted small">
-                                                    <?= htmlspecialchars($journey->car_brand) ?>
+                                                    <i class="fas fa-car-side me-1"></i>
+                                                    <?= htmlspecialchars($journey->car_model ?? '') ?><?php if (!empty($journey->car_model) && !empty($journey->car_immat)) echo ' '; ?><?= !empty($journey->car_immat) ? '(' . htmlspecialchars($journey->car_immat) . ')' : '' ?>
                                                 </div>
                                             </div>
                                         <?php endif; ?>

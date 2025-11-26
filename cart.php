@@ -70,12 +70,15 @@ $sql = "SELECT j.*,
     c2.name AS destination_city,
     d1.name AS departure_delegation, 
     d2.name AS destination_delegation,
+    car.model AS car_model,
+    car.immat AS car_immat,
     u.firstName AS driver_firstName, u.lastName AS driver_lastName, u.phone AS driver_phone, u.email AS driver_email, u.gender AS driver_gender
     FROM journey j
     JOIN city c1 ON j.departure = c1.idCity
     JOIN city c2 ON j.destination = c2.idCity
     LEFT JOIN delegation d1 ON j.departureDelegation = d1.idDelegation
     LEFT JOIN delegation d2 ON j.destinationDelegation = d2.idDelegation
+    LEFT JOIN car ON j.immatCar = car.immat
     LEFT JOIN users u ON j.cinRequester = u.cin
     WHERE j.idJourney IN ($ids)";
 
@@ -95,6 +98,9 @@ while ($row = $res->fetch_assoc()):
         <strong><?= $depCity . $depDel ?> → <?= $destCity . $destDel ?></strong><br>
         Date : <?= htmlspecialchars($row['depDate']) ?> at <?= htmlspecialchars(substr($row['depTime'],0,5)) ?><br>
         Price : <span class="journey-price" data-id="<?= $row['idJourney'] ?>"><?= htmlspecialchars($row['price']) ?></span> DT<br>
+        <?php if (!empty($row['car_model']) || !empty($row['car_immat'])): ?>
+            <strong>Car:</strong> <?= htmlspecialchars($row['car_model'] ?? '') ?> <?= !empty($row['car_immat']) ? '(' . htmlspecialchars($row['car_immat']) . ')' : '' ?><br>
+        <?php endif; ?>
         Available Seats: <?= htmlspecialchars($row['nbSeats']) ?><br>
 
         <!-- Seats input placed inside the same journey block -->
