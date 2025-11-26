@@ -105,9 +105,12 @@ $cities = $cityManager->findAll();
                     <span class="navbar-text me-3">
                         <i class="fas fa-user"></i> <?= htmlspecialchars($_SESSION['user_firstName'] ?? 'Utilisateur') ?>
                     </span>
-                    <a class="nav-link" href="logout.php">
-                        <i class="fas fa-sign-out-alt"></i> Déconnexion
-                    </a>
+                    <form method="post" action="logout.php" style="display:inline;">
+                        <button type="submit" class="nav-link btn btn-link" style="padding:0; border:none; background:none;" 
+                                onclick="return confirm('Voulez-vous vous déconnecter ?');">
+                            <i class="fas fa-sign-out-alt"></i> Déconnexion
+                        </button>
+                    </form>
                 <?php else: ?>
                     <a class="nav-link" href="login.php">
                         <i class="fas fa-sign-in-alt"></i> Connexion
@@ -161,7 +164,10 @@ $cities = $cityManager->findAll();
                                         <div class="text-center flex-fill">
                                             <div class="fw-bold text-primary">
                                                 <i class="fas fa-map-marker-alt"></i>
-                                                <?= htmlspecialchars($journey->departure_city_name ?? 'Départ') ?>
+                                                    <?= htmlspecialchars($journey->departure_city_name ?? 'Départ') ?>
+                                                <?php if (!empty($journey->departure_delegation_name)): ?>
+                                                    <div class="text-muted small"><?= htmlspecialchars($journey->departure_delegation_name) ?></div>
+                                                <?php endif; ?>
                                             </div>
                                             <small class="text-muted">Departure</small>
                                         </div>
@@ -174,6 +180,9 @@ $cities = $cityManager->findAll();
                                             <div class="fw-bold text-success">
                                                 <i class="fas fa-flag-checkered"></i>
                                                 <?= htmlspecialchars($journey->destination_city_name ?? 'Destination') ?>
+                                            <?php if (!empty($journey->destination_delegation_name)): ?>
+                                                <div class="text-muted small"><?= htmlspecialchars($journey->destination_delegation_name) ?></div>
+                                            <?php endif; ?>
                                             </div>
                                             <small class="text-muted">Arrival</small>
                                         </div>
@@ -249,7 +258,13 @@ $cities = $cityManager->findAll();
                                         <div class="flex-fill">
                                             <div class="fw-bold">Conducteur</div>
                                             <div class="text-muted small">
-                                                <?= htmlspecialchars($journey->driver_name ?? 'Anonyme') ?>
+                                                    <?= htmlspecialchars($journey->driver_name ?? 'Anonyme') ?>
+                                                    <?php if (!empty($journey->driver_phone) || !empty($journey->driver_email) || !empty($journey->driver_gender)): ?>
+                                                        <br>
+                                                        <?php if (!empty($journey->driver_phone)): ?><strong>Phone:</strong> <?= htmlspecialchars($journey->driver_phone) ?><br><?php endif; ?>
+                                                        <?php if (!empty($journey->driver_email)): ?><strong>Email:</strong> <?= htmlspecialchars($journey->driver_email) ?><br><?php endif; ?>
+                                                        <?php if (!empty($journey->driver_gender)): ?><strong>Gender:</strong> <?= htmlspecialchars($journey->driver_gender) ?><br><?php endif; ?>
+                                                    <?php endif; ?>
                                             </div>
                                         </div>
                                         <?php if (isset($journey->car_brand)): ?>

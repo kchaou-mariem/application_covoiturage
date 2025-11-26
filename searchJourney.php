@@ -87,37 +87,52 @@ if (isset($_POST['search'])) {
         if (!empty($journeys)) {
             echo "<h3>Results:</h3>";
             foreach ($journeys as $j) {
-                echo "<p>
-                        <strong>From:</strong> {$j->departure_city_name} {$j->departure_delegation_name} 
-                        → <strong>To:</strong> {$j->destination_city_name} {$j->destination_delegation_name}<br>
-                        <strong>Date:</strong> {$j->getDepDate()} {$j->getDepTime()}<br>
-                        <strong>Available Seats:</strong> {$j->getNbSeats()}<br>
-                        <strong>Price:</strong> {$j->getPrice()} DT<br>";
+                // Sanitize values
+                $depCity = htmlspecialchars($j->departure_city_name ?? '');
+                $depDel = htmlspecialchars($j->departure_delegation_name ?? '');
+                $destCity = htmlspecialchars($j->destination_city_name ?? '');
+                $destDel = htmlspecialchars($j->destination_delegation_name ?? '');
+                $date = htmlspecialchars($j->getDepDate());
+                $time = htmlspecialchars($j->getDepTime());
+                $seats = (int)$j->getNbSeats();
+                $price = htmlspecialchars(number_format((float)$j->getPrice(), 2));
 
-                // Statut du trajet
-                if ($j->getNbSeats() > 0) {
-                    echo "<strong>Status:</strong> <span class='status-available'>Available</span><br>";
+                echo "<div class='result-item'>";
+                echo "<p><strong>From:</strong> {$depCity}" . (!empty($depDel) ? " ({$depDel})" : "") . " &rarr; <strong>To:</strong> {$destCity}" . (!empty($destDel) ? " ({$destDel})" : "") . "</p>";
+                echo "<p><strong>Date:</strong> {$date} {$time} &nbsp; <strong>Available Seats:</strong> {$seats} &nbsp; <strong>Price:</strong> {$price} DT</p>";
+
+                // Status
+                if ($seats > 0) {
+                    echo "<p><strong>Status:</strong> <span class='status-available'>Available</span></p>";
                 } else {
-                    echo "<strong>Status:</strong> <span class='status-full'>Full</span><br>";
+                    echo "<p><strong>Status:</strong> <span class='status-full'>Full</span></p>";
                 }
 
                 if (!empty($j->getImmatCar())) {
-                    echo "<strong>Car:</strong> {$j->getImmatCar()}<br>";
+                    echo "<p><strong>Car:</strong> " . htmlspecialchars($j->getImmatCar()) . "</p>";
+                }
+
+                // Driver info (delegation and driver shown clearly)
+                if (!empty($j->driver_name) || !empty($j->driver_phone) || !empty($j->driver_email)) {
+                    echo "<p><strong>Driver:</strong> " . htmlspecialchars($j->driver_name ?? 'Anonyme') . "</p>";
+                    if (!empty($j->driver_phone)) echo "<p><strong>Phone:</strong> " . htmlspecialchars($j->driver_phone) . "</p>";
+                    if (!empty($j->driver_email)) echo "<p><strong>Email:</strong> " . htmlspecialchars($j->driver_email) . "</p>";
+                    if (!empty($j->driver_gender)) echo "<p><strong>Gender:</strong> " . htmlspecialchars($j->driver_gender) . "</p>";
                 }
 
                 $prefsArray = $j->getPreferencesArray();
                 if (!empty($prefsArray)) {
-                    echo "<strong>Preferences:</strong> " . implode(', ', $prefsArray) . "<br>";
+                    echo "<p><strong>Preferences:</strong> " . htmlspecialchars(implode(', ', $prefsArray)) . "</p>";
                 }
 
-                // Bouton Ajouter au panier
-                if ($j->getNbSeats() > 0) {
-                    echo "<a href='cart.php?add={$j->getIdJourney()}' class='btn-active'>Ajouter au panier</a>";
+                // Add to cart button
+                if ($seats > 0) {
+                    echo "<p><a href='cart.php?add=" . urlencode($j->getIdJourney()) . "' class='btn-active'>Ajouter au panier</a></p>";
                 } else {
-                    echo "<button class='btn-disabled' disabled>Complet</button>";
+                    echo "<p><button class='btn-disabled' disabled>Complet</button></p>";
                 }
 
-                echo "</p><hr>";
+                echo "<hr></div>";
             }
         } else {
             echo "<p>No journeys found matching your criteria.</p>";

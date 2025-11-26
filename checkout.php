@@ -15,16 +15,19 @@ if ($conn->connect_error) {
 }
 console_log("Database connection OK");
 
-// 2. CIN
-$_SESSION['cin'] = "11163595";
-$cinRequester = $_SESSION['cin'];
-console_log("CIN in session: $cinRequester");
 
-// 3. Vérifier l'utilisateur
+// 2. Vérifier l'utilisateur
 $tableCheck = $conn->query("SHOW TABLES LIKE 'users'");
 if (!$tableCheck || $tableCheck->num_rows == 0) {
     die("❌ Table 'users' does not exist!");
 }
+
+// 3. CIN
+// Use the logged-in user's CIN stored in session as 'user_cin'
+if (session_status() == PHP_SESSION_NONE) session_start();
+$cinRequester = $_SESSION['user_cin'] ?? null;
+console_log("CIN in session: $cinRequester");
+
 
 $sql = "SELECT cin, firstName, lastName FROM users WHERE cin = ?";
 $stmt = $conn->prepare($sql);

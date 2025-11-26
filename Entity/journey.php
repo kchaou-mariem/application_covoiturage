@@ -12,12 +12,22 @@ class Journey {
     private $destinationDelegation;
     private $immatCar;
     private $preferences;
+    private $cinRequester;
 
+
+    //Ces attributs vont stocker directement les noms récupérés via la jointure SQL pour que tu puisses les afficher facilement dans ton code PHP
      // ✅ Ajoute ces attributs optionnels pour les jointures
     public $departure_city_name;
     public $destination_city_name;
     public $departure_delegation_name;
     public $destination_delegation_name;
+    // Driver info (populated when joined with users table)
+    public $driver_firstName;
+    public $driver_lastName;
+    public $driver_phone;
+    public $driver_email;
+    public $driver_gender;
+    public $driver_name;
     
     // Constructeur
     public function __construct(
@@ -44,6 +54,7 @@ class Journey {
         $this->destinationDelegation = $destinationDelegation;
         $this->immatCar = $immatCar;
         $this->preferences = $preferences;
+        $this->cinRequester = null;
     }
     
     // Getters
@@ -85,6 +96,10 @@ class Journey {
     
     public function getImmatCar() {
         return $this->immatCar;
+    }
+
+    public function getCinRequester() {
+        return $this->cinRequester;
     }
     
     public function getPreferences() {
@@ -131,6 +146,10 @@ class Journey {
     
     public function setImmatCar($immatCar) {
         $this->immatCar = $immatCar;
+    }
+
+    public function setCinRequester($cin) {
+        $this->cinRequester = $cin;
     }
     
     public function setPreferences($preferences) {

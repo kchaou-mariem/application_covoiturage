@@ -1,5 +1,6 @@
 <?php
 require_once 'config/connexion.php';
+if (session_status() == PHP_SESSION_NONE) session_start();
 require_once 'Entity/City.php';
 require_once 'Entity/Delegation.php';
 require_once 'Entity/Car.php';
@@ -135,6 +136,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $immat,              // ✅ immatCar
     $preferencesJson     // ✅ preferences (JSON)
 );
+
+    // --- assign cinRequester from logged in user session if available ---
+    $cinRequester = null;
+    if (!empty($_SESSION['user_cin'])) {
+        $cinRequester = $_SESSION['user_cin'];
+    }
+
+    if ($cinRequester !== null && method_exists($journey, 'setCinRequester')) {
+        $journey->setCinRequester($cinRequester);
+    }
 
 
     if ($journeyManager->create($journey)) {

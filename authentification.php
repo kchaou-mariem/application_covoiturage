@@ -48,7 +48,7 @@ function connectToDatabase() {
 }
 
 /**
- * Authenticate user credentials
+ * vérifie le compte et le mot de passe d’un utilisateur pour valider sa connexion
  */
 function authenticateUser($mysqli, $email, $password) {
     $sql = "SELECT cin, email, password, firstName, lastName FROM users WHERE email = ?";
@@ -71,8 +71,8 @@ function authenticateUser($mysqli, $email, $password) {
         ];
     }
     
-    // Get user data
-    $stmt->bind_result($id, $db_email, $db_password, $firstName, $lastName);
+    // Get user data (note: the first column is the user's CIN)
+    $stmt->bind_result($cin, $db_email, $db_password, $firstName, $lastName);
     $stmt->fetch();
     $stmt->close();
     
@@ -81,7 +81,7 @@ function authenticateUser($mysqli, $email, $password) {
         return [
             'success' => true,
             'user' => [
-                'id' => $id,
+                'cin' => $cin,
                 'email' => $db_email,
                 'firstName' => $firstName,
                 'lastName' => $lastName
@@ -94,6 +94,12 @@ function authenticateUser($mysqli, $email, $password) {
         ];
     }
 }
+
+// La fonction authenticateUser() retourne un tableau :
+//     * - 'success' => bool (true si authentification réussie, false sinon)
+//     * - 'user' => array (détails de l'utilisateur si succès)
+//     * - 'message' => string (message d'erreur si échec)
+//     */
 
 /**
  * Start user session
@@ -140,13 +146,20 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $mysqli = connectToDatabase();
             
             // Step 3: Authenticate user
-            $authResult = authenticateUser($mysqli, $email, $password);
+            $authResult = authenticateUser($mysqli, $email, $password); // true if success, false + message if fail
             
-            if ($authResult['success']) {
-                /*
-                // Step 4: Start session
-                startUserSession($authResult['user']);
-                */
+            if ($authResult['success']) { 
+                // Step 4: Start session and store user CIN + basic info for later use
+                if (session_status() == PHP_SESSION_NONE) session_start();
+                // The authenticateUser() returns 'cin' containing the user's CIN
+                $_SESSION['user_cin'] = $authResult['user']['cin'];
+                // Keep a single session key for CIN: 'user_cin'
+                $_SESSION['user_email'] = $authResult['user']['email'];
+                $_SESSION['user_firstName'] = $authResult['user']['firstName'];
+                $_SESSION['user_lastName'] = $authResult['user']['lastName'];
+                $_SESSION['user_name'] = $authResult['user']['firstName'] . ' ' . $authResult['user']['lastName'];
+                $_SESSION['logged_in'] = true;
+                $_SESSION['login_time'] = time();
 
                 // Step 5: Success message and redirect
                 echo "<div style='color: green; border: 1px solid green; padding: 10px; margin: 10px 0;'>";

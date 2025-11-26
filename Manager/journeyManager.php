@@ -15,15 +15,15 @@ class JourneyManager {
 
         $stmt = $this->conn->prepare("
             INSERT INTO journey 
-            (price, nbSeats, depDate, depTime, departure, destination, departureDelegation, destinationDelegation, immatCar, preferences)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                (price, nbSeats, depDate, depTime, departure, destination, departureDelegation, destinationDelegation, immatCar, preferences, cinRequester)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ");
 
         if (!$stmt) {
             throw new Exception("Erreur préparation requête: " . $this->conn->error);
         }
 
-   $price = $journey->getPrice();
+    $price = $journey->getPrice();
     $nbSeats = $journey->getNbSeats();
     $depDate = $journey->getDepDate();
     $depTime = $journey->getDepTime();
@@ -33,20 +33,23 @@ class JourneyManager {
     $destinationDelegation = $journey->getDestinationDelegation();
     $immatCar = $journey->getImmatCar();
     $preferences = $journey->getPreferences();
+    $cinRequester = $journey->getCinRequester();
 
-$stmt->bind_param(
-    "sdssssssss",
-    $price,
-    $nbSeats,
-    $depDate,
-    $depTime,
-    $departure,
-    $destination,
-    $departureDelegation,
-    $destinationDelegation,
-    $immatCar,
-    $preferences
-);
+    // types: price (d), nbSeats (i), depDate (s), depTime (s), departure (i), destination (i), departureDelegation (i), destinationDelegation (i), immatCar (s), preferences (s), cinRequester (s)
+    $stmt->bind_param(
+        "dissiiiisss",
+        $price,
+        $nbSeats,
+        $depDate,
+        $depTime,
+        $departure,
+        $destination,
+        $departureDelegation,
+        $destinationDelegation,
+        $immatCar,
+        $preferences,
+        $cinRequester
+    );
 
 
         if (!$stmt->execute()) {
@@ -68,11 +71,13 @@ $stmt->bind_param(
                    dest_city.name AS destination_city_name,
                    dep_del.name AS departure_delegation_name,
                    dest_del.name AS destination_delegation_name
+                   , u.firstName AS driver_firstName, u.lastName AS driver_lastName, u.phone AS driver_phone, u.email AS driver_email, u.gender AS driver_gender
             FROM journey j
             LEFT JOIN city dep_city ON j.departure = dep_city.idCity
             LEFT JOIN city dest_city ON j.destination = dest_city.idCity
             LEFT JOIN delegation dep_del ON j.departureDelegation = dep_del.idDelegation
             LEFT JOIN delegation dest_del ON j.destinationDelegation = dest_del.idDelegation
+            LEFT JOIN users u ON j.cinRequester = u.cin
             WHERE j.idJourney = ?
         ";
 
@@ -148,11 +153,13 @@ $stmt->bind_param(
                    dest_city.name AS destination_city_name,
                    dep_del.name AS departure_delegation_name,
                    dest_del.name AS destination_delegation_name
+                   , u.firstName AS driver_firstName, u.lastName AS driver_lastName, u.phone AS driver_phone, u.email AS driver_email, u.gender AS driver_gender
             FROM journey j
             LEFT JOIN city dep_city ON j.departure = dep_city.idCity
             LEFT JOIN city dest_city ON j.destination = dest_city.idCity
             LEFT JOIN delegation dep_del ON j.departureDelegation = dep_del.idDelegation
             LEFT JOIN delegation dest_del ON j.destinationDelegation = dest_del.idDelegation
+            LEFT JOIN users u ON j.cinRequester = u.cin
             ORDER BY j.depDate DESC, j.depTime DESC
         ";
 
@@ -194,21 +201,33 @@ $stmt->bind_param(
         if (isset($data['departure_delegation_name'])) $journey->departure_delegation_name = $data['departure_delegation_name'];
         if (isset($data['destination_delegation_name'])) $journey->destination_delegation_name = $data['destination_delegation_name'];
 
+        // Driver info if available
+        if (isset($data['driver_firstName'])) $journey->driver_firstName = $data['driver_firstName'];
+        if (isset($data['driver_lastName'])) $journey->driver_lastName = $data['driver_lastName'];
+        if (isset($data['driver_phone'])) $journey->driver_phone = $data['driver_phone'];
+        if (isset($data['driver_email'])) $journey->driver_email = $data['driver_email'];
+        if (isset($data['driver_gender'])) $journey->driver_gender = $data['driver_gender'];
+        if (!empty($journey->driver_firstName) || !empty($journey->driver_lastName)) {
+            $journey->driver_name = trim(($journey->driver_firstName ?? '') . ' ' . ($journey->driver_lastName ?? ''));
+        }
+
         return $journey;
     }
 
-    // 🔍 Recherche des trajets selon critères
+    //  Recherche des trajets selon critères
 public function searchJourneys($departure, $destination, $date = null, $seats = 0, $preferences = []) {
     $sql = "SELECT j.*,
                c1.name AS departure_city_name,
                c2.name AS destination_city_name,
                d1.name AS departure_delegation_name,
                d2.name AS destination_delegation_name
+         , u.firstName AS driver_firstName, u.lastName AS driver_lastName, u.phone AS driver_phone, u.email AS driver_email, u.gender AS driver_gender
         FROM journey j
         LEFT JOIN city c1 ON j.departure = c1.idCity
         LEFT JOIN city c2 ON j.destination = c2.idCity
         LEFT JOIN delegation d1 ON j.departureDelegation = d1.idDelegation
         LEFT JOIN delegation d2 ON j.destinationDelegation = d2.idDelegation
+     LEFT JOIN users u ON j.cinRequester = u.cin
         WHERE j.departure = ? AND j.destination = ?";
     $params = [$departure, $destination];
     $types = "ii";

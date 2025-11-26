@@ -3,12 +3,12 @@ session_start();
 require_once 'config/connexion.php';
 
 // Check if the user is logged in
-if (!isset($_SESSION['cin'])) {
-    header("Location: login.php");
-    exit();
-}
-
-$cinRequester = $_SESSION['cin'];
+    if (session_status() == PHP_SESSION_NONE) session_start();
+    if (!isset($_SESSION['user_cin'])) {
+        header('Location: authentification.html');
+        exit;
+    }
+    $cinRequester = $_SESSION['user_cin'];
 
 // Fetch user's bookings
 $sql = "SELECT 
