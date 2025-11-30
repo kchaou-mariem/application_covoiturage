@@ -14,34 +14,23 @@ $cities = $cityManager->findAll();
 $prefs = $prefManager->findAll();
 ?>
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Search Journey</title>
-    <style>
-        .status-available { color: green; font-weight: bold; }
-        .status-full { color: red; font-weight: bold; }
-        .btn-disabled { background-color: gray; color: white; border: none; padding: 5px 10px; cursor: not-allowed; }
-        .btn-active { background-color: #f0ad4e; color: white; border: none; padding: 5px 10px; cursor: pointer; }
-    </style>
-</head>
-<body>
+<?php include __DIR__ . '/includes/header.php'; ?>
 
-<form method="POST">
+<form method="POST" class="search-form">
     <h2>Search for a Journey</h2>
 
     <label for="departure_city">Departure:</label>
-    <select name="departure_city" id="departure_city" required>
+    <select class="form-select" name="departure_city" id="departure_city" required>
         <option value="">-- Choose city --</option>
         <?php foreach ($cities as $city): ?>
             <option value="<?= $city->getIdCity(); ?>"><?= htmlspecialchars($city->getName()); ?></option>
         <?php endforeach; ?>
     </select>
     <br>
+    <br>
 
     <label for="destination_city">Destination:</label>
-    <select name="destination_city" id="destination_city" required>
+    <select class="form-select" name="destination_city" id="destination_city" required>
         <option value="">-- Choose city --</option>
         <?php foreach ($cities as $city): ?>
             <option value="<?= $city->getIdCity(); ?>"><?= htmlspecialchars($city->getName()); ?></option>
@@ -50,11 +39,11 @@ $prefs = $prefManager->findAll();
     <br>
 
     <label for="date">Date:</label>
-    <input type="date" id="date" name="date">
+    <input class="form-control" type="date" id="date" name="date">
     <br>
 
     <label for="seats">Seats available:</label>
-    <input type="number" id="seats" name="seats" min="1" max="9">
+    <input class="form-control" type="number" id="seats" name="seats" min="1" max="9">
     <br>
 
     <h3>+ Preferences</h3>
@@ -66,7 +55,7 @@ $prefs = $prefManager->findAll();
     <?php endforeach; ?>
 
     <br>
-    <input type="submit" name="search" value="Search Journey">
+    <button type="submit" name="search" class="btn btn-search">Search Journey</button>
 </form>
 
 <hr>
@@ -85,7 +74,7 @@ if (isset($_POST['search'])) {
         $journeys = $journeyManager->searchJourneys($departure, $destination, $date, $seats, $preferences);
 
         if (!empty($journeys)) {
-            echo "<h3>Results:</h3>";
+            echo "<h3>Results:</h3><div class='search-results'>";
             foreach ($journeys as $j) {
                 // Sanitize values
                 $depCity = htmlspecialchars($j->departure_city_name ?? '');
@@ -129,19 +118,18 @@ if (isset($_POST['search'])) {
 
                 // Add to cart button
                 if ($seats > 0) {
-                    echo "<p><a href='cart.php?add=" . urlencode($j->getIdJourney()) . "' class='btn-active'>Ajouter au panier</a></p>";
+                    echo "<p><a href='cart.php?add=" . urlencode($j->getIdJourney()) . "' class='btn-active'>Add to Cart</a></p>";
                 } else {
-                    echo "<p><button class='btn-disabled' disabled>Complet</button></p>";
+                    echo "<p><button class='btn-disabled' disabled>Full</button></p>";
                 }
 
                 echo "<hr></div>";
             }
+                        echo "</div>"; // close .search-results
         } else {
             echo "<p>No journeys found matching your criteria.</p>";
         }
     }
 }
 ?>
-
-</body>
-</html>
+            <?php include __DIR__ . '/includes/footer.php'; ?>

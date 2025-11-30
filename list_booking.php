@@ -62,146 +62,7 @@ while ($row = $result->fetch_assoc()) {
 $stmt->close();
 ?>
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Bookings</title>
-    <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: #f5f6fa;
-            padding: 20px;
-            color: #333;
-        }
-
-        .container {
-            max-width: 1000px;
-            margin: 0 auto;
-        }
-
-        h1, h2 {
-            text-align: center;
-            margin-bottom: 20px;
-        }
-
-        /* Stats */
-        .stats-container {
-            display: flex;
-            justify-content: space-around;
-            margin-bottom: 30px;
-            flex-wrap: wrap;
-        }
-
-        .stat-card {
-            background: #fff;
-            padding: 20px;
-            margin: 10px;
-            border-radius: 12px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-            text-align: center;
-            flex: 1 1 150px;
-            transition: transform 0.2s;
-        }
-
-        .stat-card:hover {
-            transform: translateY(-5px);
-        }
-
-        .stat-number {
-            font-size: 1.9rem;
-            font-weight: bold;
-            color: #3498db;
-        }
-
-        .stat-label {
-            font-size: 0.9rem;
-            color: #555;
-        }
-
-        /* Bookings */
-        .bookings-grid {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 15px;
-            justify-content: center;
-        }
-
-        .booking-card {
-            background: #fff;
-            padding: 18px;
-            border-radius: 12px;
-            flex: 1 1 300px;
-            box-shadow: 0 3px 6px rgba(0,0,0,0.1);
-            transition: transform 0.3s;
-        }
-
-        .booking-card:hover {
-            transform: translateY(-5px);
-        }
-
-        .route {
-            font-weight: bold;
-            margin-bottom: 10px;
-            font-size: 1.1rem;
-        }
-
-        .badge {
-            padding: 5px 12px;
-            border-radius: 15px;
-            font-size: 0.75rem;
-            font-weight: bold;
-            text-transform: uppercase;
-        }
-
-        .badge-upcoming { background: #d4edda; color: #155724; }
-        .badge-today { background: #fff3cd; color: #856404; }
-        .badge-past { background: #e2e3e5; color: #6c757d; }
-
-        .detail-item {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 6px;
-            font-size: 0.9rem;
-        }
-
-        .price {
-            text-align: right;
-            font-weight: bold;
-            margin-top: 10px;
-            color: #3498db;
-        }
-
-        .action-btn {
-            display: inline-block;
-            padding: 7px 14px;
-            margin-top: 10px;
-            background: #3498db;
-            color: #fff;
-            border-radius: 8px;
-            text-decoration: none;
-            font-size: 0.85rem;
-            transition: background 0.2s;
-        }
-
-        .action-btn:hover { background: #2c80b4; }
-
-        .empty-state {
-            text-align: center;
-            padding: 40px 0;
-            color: #777;
-        }
-
-        /* Responsive */
-        @media (max-width: 600px) {
-            .stats-container { flex-direction: column; align-items: center; }
-            .booking-card { flex: 1 1 100%; }
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
+<?php include __DIR__ . '/includes/header.php'; ?>
         <div class="header">
             <h1>🎫 My Bookings</h1>
             <p>Check your booking history and upcoming trips</p>
@@ -232,11 +93,11 @@ $stmt->close();
                     <?php foreach ($upcoming_bookings as $booking): ?>
                         <div class="booking-card">
                             <div class="card-header">
-                                <div class="route"><?php echo htmlspecialchars($booking['departure_city']); ?> → <?php echo htmlspecialchars($booking['destination_city']); ?></div>
-                                <span class="badge <?php echo $booking['badge_class']; ?>">
-                                    <?php echo $booking['status']; ?>
-                                </span>
-                            </div>
+                                        <div class="route"><?php echo htmlspecialchars($booking['departure_city']); ?> → <?php echo htmlspecialchars($booking['destination_city']); ?></div>
+                                        <span class="badge <?php echo $booking['badge_class']; ?>">
+                                            <?php echo $booking['status']; ?>
+                                        </span>
+                                    </div>
                             
                             <div class="card-details">
                                 <div class="detail-item">
@@ -259,12 +120,7 @@ $stmt->close();
                             
                             <div class="price"><?php echo $booking['totalPrice']; ?> DT</div>
                             
-                            <div class="card-footer">
-                                <span class="booking-id">#<?php echo $booking['idBooking']; ?></span>
-                                <a href="trajet_details.php?id=<?php echo $booking['idJourney']; ?>" class="action-btn">
-                                    View Journey
-                                </a>
-                            </div>
+                            
                         </div>
                     <?php endforeach; ?>
                 </div>
@@ -309,12 +165,7 @@ $stmt->close();
                             
                             <div class="price"><?php echo $booking['totalPrice']; ?> DT</div>
                             
-                            <div class="card-footer">
-                                <span class="booking-id">#<?php echo $booking['idBooking']; ?></span>
-                                <a href="#" class="action-btn" style="background: #95a5a6;">
-                                    View Details
-                                </a>
-                            </div>
+                            
                         </div>
                     <?php endforeach; ?>
                 </div>
@@ -349,5 +200,5 @@ $stmt->close();
             });
         });
     </script>
-</body>
-</html>
+
+<?php include __DIR__ . '/includes/footer.php'; ?>

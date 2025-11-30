@@ -6,7 +6,12 @@ require_once 'Manager/booking_manager.php';
 
 // Helper pour log dans console
 function console_log($msg) {
-    echo "<script>console.log(" . json_encode($msg) . ");</script>";
+    // Log to server error log instead of sending output to the browser
+    if (is_array($msg) || is_object($msg)) {
+        error_log(json_encode($msg));
+    } else {
+        error_log($msg);
+    }
 }
 
 // 1. Vérifier la connexion à la base de données
@@ -59,21 +64,31 @@ $successCount = 0;
 $conn->begin_transaction();
 try {
     foreach ($_SESSION['cart'] as $idJourney) {
+        // Build a human-friendly label for this journey (Dep → Dest) to avoid showing raw IDs in UI
+        $label = 'Journey ' . $idJourney;
+        $q = $conn->prepare("SELECT c1.name AS dep, c2.name AS dest FROM journey j JOIN city c1 ON j.departure = c1.idCity JOIN city c2 ON j.destination = c2.idCity WHERE j.idJourney = ?");
+        if ($q) {
+            $q->bind_param('i', $idJourney);
+            $q->execute();
+            $r = $q->get_result()->fetch_assoc();
+            if ($r) $label = htmlspecialchars(($r['dep'] ?? 'Départ') . ' → ' . ($r['dest'] ?? 'Destination'));
+            $q->close();
+        }
         $seatsField = "seats_$idJourney";
         if (!isset($_POST[$seatsField])) {
-            $messages[] = "Seats not specified for journey $idJourney.";
+            $messages[] = "Seats not specified for journey: $label.";
             continue;
         }
 
         $requestedSeats = intval($_POST[$seatsField]);
         if ($requestedSeats <= 0) {
-            $messages[] = "Invalid seats number for journey $idJourney.";
+            $messages[] = "Invalid seats number for journey: $label.";
             continue;
         }
 
         // Vérifier disponibilité
         if (!$bookingManager->checkSeatAvailability($idJourney, $requestedSeats)) {
-            $messages[] = "Not enough seats available for journey $idJourney.";
+            $messages[] = "Not enough seats available for journey: $label.";
             continue;
         }
 
@@ -93,13 +108,18 @@ try {
         // Mettre à jour les places
         $bookingManager->updateAvailableSeats($idJourney, $requestedSeats);
 
-        $messages[] = "Booking completed for journey $idJourney - $requestedSeats seat(s)";
+        $messages[] = "Booking completed for journey $label - $requestedSeats place(s)";
         $successCount++;
         console_log("Successfully processed journey $idJourney");
     }
 
     $conn->commit();
-    if ($successCount > 0) unset($_SESSION['cart']);
+    if ($successCount > 0) {
+        unset($_SESSION['cart']);
+        // Redirect to trajets page immediately after successful booking
+        header('Location: trajets.php');
+        exit();
+    }
 
 } catch (Exception $e) {
     $conn->rollback();
@@ -122,7 +142,7 @@ try {
 <div class="container">
 <h2>📋 Booking Summary</h2>
 <div class="summary">
-<strong>Total bookings processed:</strong> <?php echo $successCount; ?><br>
+<strong>Bookings processed:</strong> <?php echo $successCount; ?><br>
 <strong>User:</strong> <?php echo $user['firstName'] . ' ' . $user['lastName']; ?> (CIN: <?php echo $cinRequester; ?>)
 </div>
 <div class="messages">
@@ -132,8 +152,8 @@ try {
 </div>
 <?php endforeach; ?>
 </div>
-<a href="<?php echo $successCount>0 ? 'trajets.php' : 'cart.php'; ?>" class="btn">
-<?php echo $successCount>0 ? '🏠 Return to Home Page' : '🛒 Return to Cart'; ?>
+<a href="<?php echo $successCount>0 ? 'trajets.php' : 'cart.php'; ?>" class="btn btn-primary">
+<?php echo $successCount>0 ? '🏠 Return to Journeys' : '🛒 Return to Cart'; ?>
 </a>
 </div>
 </body>

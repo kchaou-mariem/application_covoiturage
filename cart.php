@@ -38,96 +38,93 @@ if (isset($_GET['remove'])) {
     exit();
 }
 ?>
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8">
-    <title>Shopping Cart</title>
-</head>
-<body>
+<?php require_once __DIR__ . '/includes/header.php'; ?>
 
-<h1>Your Cart</h1>
+    <div class="container">
+        <div class="card cart-card my-4 p-3">
+            <h2 class="mb-3">Your Cart</h2>
 
-<?php
-if (!empty($_SESSION['error'])) {
-    echo "<p style='color:red;'>".$_SESSION['error']."</p>";
-    unset($_SESSION['error']);
-}
+            <?php
+            if (!empty($_SESSION['error'])) {
+                    echo "<div class='alert alert-danger'>" . htmlspecialchars($_SESSION['error']) . "</div>";
+                    unset($_SESSION['error']);
+            }
 
-if (!empty($_SESSION['success'])) {
-    echo "<p style='color:green;'>".$_SESSION['success']."</p>";
-    unset($_SESSION['success']);
-}
+            if (!empty($_SESSION['success'])) {
+                    echo "<div class='alert alert-success'>" . htmlspecialchars($_SESSION['success']) . "</div>";
+                    unset($_SESSION['success']);
+            }
 
-// --- 4) AFFICHAGE DU PANIER ---
-if (empty($_SESSION['cart'])) {
-    echo "<p>Your cart is empty.</p>";
-    exit();
-}
-$ids = implode(",", array_map('intval', $_SESSION['cart'])); // Sécuriser les IDs
-$sql = "SELECT j.*, 
-    c1.name AS departure_city, 
-    c2.name AS destination_city,
-    d1.name AS departure_delegation, 
-    d2.name AS destination_delegation,
-    car.model AS car_model,
-    car.immat AS car_immat,
-    u.firstName AS driver_firstName, u.lastName AS driver_lastName, u.phone AS driver_phone, u.email AS driver_email, u.gender AS driver_gender
-    FROM journey j
-    JOIN city c1 ON j.departure = c1.idCity
-    JOIN city c2 ON j.destination = c2.idCity
-    LEFT JOIN delegation d1 ON j.departureDelegation = d1.idDelegation
-    LEFT JOIN delegation d2 ON j.destinationDelegation = d2.idDelegation
-    LEFT JOIN car ON j.immatCar = car.immat
-    LEFT JOIN users u ON j.cinRequester = u.cin
-    WHERE j.idJourney IN ($ids)";
+            // --- 4) AFFICHAGE DU PANIER ---
+              if (empty($_SESSION['cart'])) {
+              echo "<p>Your cart is empty.</p>";
+            } else {
+                    $ids = implode(",", array_map('intval', $_SESSION['cart'])); // Sécuriser les IDs
+                    $sql = "SELECT j.*, 
+                            c1.name AS departure_city, 
+                            c2.name AS destination_city,
+                            d1.name AS departure_delegation, 
+                            d2.name AS destination_delegation,
+                            car.model AS car_model,
+                            car.immat AS car_immat,
+                            u.firstName AS driver_firstName, u.lastName AS driver_lastName, u.phone AS driver_phone, u.email AS driver_email, u.gender AS driver_gender
+                            FROM journey j
+                            JOIN city c1 ON j.departure = c1.idCity
+                            JOIN city c2 ON j.destination = c2.idCity
+                            LEFT JOIN delegation d1 ON j.departureDelegation = d1.idDelegation
+                            LEFT JOIN delegation d2 ON j.destinationDelegation = d2.idDelegation
+                            LEFT JOIN car ON j.immatCar = car.immat
+                            LEFT JOIN users u ON j.cinRequester = u.cin
+                            WHERE j.idJourney IN ($ids)";
 
-$res = $conn->query($sql);
+                    $res = $conn->query($sql);
 
-// Start a single checkout form that contains seat inputs for each journey
-echo '<form action="checkout.php" method="POST">';
-while ($row = $res->fetch_assoc()):
-?>
-    <div style="border:1px solid #ccc; padding:10px; margin:10px;" data-route="<?= htmlspecialchars($row['departure_city'] . ' → ' . $row['destination_city']) ?>" data-id="<?= $row['idJourney'] ?>">
-        <?php
-            $depCity = htmlspecialchars($row['departure_city']);
-            $depDel = !empty($row['departure_delegation']) ? ' (' . htmlspecialchars($row['departure_delegation']) . ')' : '';
-            $destCity = htmlspecialchars($row['destination_city']);
-            $destDel = !empty($row['destination_delegation']) ? ' (' . htmlspecialchars($row['destination_delegation']) . ')' : '';
-        ?>
-        <strong><?= $depCity . $depDel ?> → <?= $destCity . $destDel ?></strong><br>
-        Date : <?= htmlspecialchars($row['depDate']) ?> at <?= htmlspecialchars(substr($row['depTime'],0,5)) ?><br>
-        Price : <span class="journey-price" data-id="<?= $row['idJourney'] ?>"><?= htmlspecialchars($row['price']) ?></span> DT<br>
-        <?php if (!empty($row['car_model']) || !empty($row['car_immat'])): ?>
-            <strong>Car:</strong> <?= htmlspecialchars($row['car_model'] ?? '') ?> <?= !empty($row['car_immat']) ? '(' . htmlspecialchars($row['car_immat']) . ')' : '' ?><br>
-        <?php endif; ?>
-        Available Seats: <?= htmlspecialchars($row['nbSeats']) ?><br>
+                    echo '<form action="checkout.php" method="POST">';
+                    while ($row = $res->fetch_assoc()):
+                        $depCity = htmlspecialchars($row['departure_city']);
+                        $depDel = !empty($row['departure_delegation']) ? ' (' . htmlspecialchars($row['departure_delegation']) . ')' : '';
+                        $destCity = htmlspecialchars($row['destination_city']);
+                        $destDel = !empty($row['destination_delegation']) ? ' (' . htmlspecialchars($row['destination_delegation']) . ')' : '';
+            ?>
+                        <div class="cart-item d-flex align-items-start gap-3 mb-3" data-route="<?= htmlspecialchars($row['departure_city'] . ' → ' . $row['destination_city']) ?>" data-id="<?= $row['idJourney'] ?>">
+                            <div class="flex-grow-1">
+                                <div class="fw-bold"><?= $depCity . $depDel ?> → <?= $destCity . $destDel ?></div>
+                                <div class="text-muted small">Date: <?= htmlspecialchars($row['depDate']) ?> at <?= htmlspecialchars(substr($row['depTime'],0,5)) ?></div>
+                                <div class="mt-2">Price: <span class="journey-price" data-id="<?= $row['idJourney'] ?>"><?= htmlspecialchars($row['price']) ?></span> DT</div>
+                                <?php if (!empty($row['car_model']) || !empty($row['car_immat'])): ?>
+                                    <div class="small">Voiture: <?= htmlspecialchars($row['car_model'] ?? '') ?> <?= !empty($row['car_immat']) ? '(' . htmlspecialchars($row['car_immat']) . ')' : '' ?></div>
+                                <?php endif; ?>
+                                <div class="small">Available seats: <?= htmlspecialchars($row['nbSeats']) ?></div>
 
-        <!-- Seats input placed inside the same journey block -->
-        <label>Seats to reserve:</label>
-        <input class="seats-input" data-id="<?= $row['idJourney'] ?>" type="number" name="seats_<?= $row['idJourney'] ?>" min="1" max="<?= htmlspecialchars($row['nbSeats']) ?>" required>
-        <br><br>
-        <?php if (!empty($row['driver_firstName']) || !empty($row['driver_lastName']) || !empty($row['driver_phone']) || !empty($row['driver_email'])): ?>
-            <div>
-                <strong>Driver:</strong> <?= htmlspecialchars(trim(($row['driver_firstName'] ?? '') . ' ' . ($row['driver_lastName'] ?? ''))) ?><br>
-                <?php if (!empty($row['driver_phone'])): ?><strong>Phone:</strong> <?= htmlspecialchars($row['driver_phone']) ?><br><?php endif; ?>
-                <?php if (!empty($row['driver_email'])): ?><strong>Email:</strong> <?= htmlspecialchars($row['driver_email']) ?><br><?php endif; ?>
-                <?php if (!empty($row['driver_gender'])): ?><strong>Gender:</strong> <?= htmlspecialchars($row['driver_gender']) ?><br><?php endif; ?>
-            </div>
-        <?php endif; ?>
+                                <?php if (!empty($row['driver_firstName']) || !empty($row['driver_lastName']) || !empty($row['driver_phone']) || !empty($row['driver_email'])): ?>
+                                    <div class="mt-2 small">
+                                        <strong>Conducteur:</strong> <?= htmlspecialchars(trim(($row['driver_firstName'] ?? '') . ' ' . ($row['driver_lastName'] ?? ''))) ?><br>
+                                        <?php if (!empty($row['driver_phone'])): ?><span>Tél: <?= htmlspecialchars($row['driver_phone']) ?></span><br><?php endif; ?>
+                                        <?php if (!empty($row['driver_email'])): ?><span>Email: <?= htmlspecialchars($row['driver_email']) ?></span><br><?php endif; ?>
+                                        <?php if (!empty($row['driver_gender'])): ?><span>Genre: <?= htmlspecialchars($row['driver_gender']) ?></span><br><?php endif; ?>
+                                    </div>
+                                <?php endif; ?>
+                            </div>
 
-        <a href="cart.php?remove=<?= $row['idJourney'] ?>">
-            <button type="button">Remove</button>
-        </a>
+                            <div class="cart-actions text-end">
+                                <label class="form-label small">Places à réserver</label>
+                                <input class="form-control seats-input mb-2" data-id="<?= $row['idJourney'] ?>" type="number" name="seats_<?= $row['idJourney'] ?>" min="1" max="<?= htmlspecialchars($row['nbSeats']) ?>" required>
+                                <div>
+                                      <a href="cart.php?remove=<?= $row['idJourney'] ?>" class="btn btn-sm btn-outline-danger">Remove</a>
+                                </div>
+                            </div>
+                        </div>
+            <?php endwhile;
+
+                      echo '<div class="d-flex justify-content-end mt-3"><button class="btn btn-success" type="submit">Pay</button></div>';
+                    echo '</form>';
+            }
+            ?>
+
+        </div>
     </div>
 
-<?php endwhile; ?>
-
-    <button type="submit" >Pay</button>
-    </form>
-
-</body>
-</html>
+<?php require_once __DIR__ . '/includes/footer.php'; ?>
 <script>
 // Confirmation before submitting payment
 document.addEventListener('DOMContentLoaded', function () {

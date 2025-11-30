@@ -161,16 +161,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 $_SESSION['logged_in'] = true;
                 $_SESSION['login_time'] = time();
 
-                // Step 5: Success message and redirect
-                echo "<div style='color: green; border: 1px solid green; padding: 10px; margin: 10px 0;'>";
-                echo "<h3>✅ Login successful!</h3>";
-                echo "<p>Welcome back, " . htmlspecialchars($authResult['user']['firstName']) . "!</p>";
-                echo "<p>Redirecting to your dashboard...</p>";
-                echo "</div>";
-                
-                // Redirect to dashboard (in a real application)
-                // header('Location: dashboard.php');
-                // exit;
+                // On successful login, redirect to trajets.php
+                if (session_status() == PHP_SESSION_NONE) session_start();
+                header('Location: trajets.php');
+                exit;
                 
             } else {
                 // Authentication failed
@@ -194,10 +188,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
     
 } else {
-    // If not a POST request, show login form message
-    echo "<div style='color: blue; border: 1px solid blue; padding: 10px; margin: 10px 0;'>";
-    echo "<p>Please submit the login form.</p>";
-    echo "</div>";
+    // If the script is reached without POST (GET), redirect to the HTML login form
+    header('Location: authentification.html');
+    exit;
 }
 
 // =============================================

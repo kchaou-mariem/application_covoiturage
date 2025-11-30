@@ -10,6 +10,63 @@ class BookingManager {
     }
 
     /**
+     * Count bookings for a given journey
+     */
+    public function countBookingsForJourney($idJourney) {
+        $sql = "SELECT COUNT(*) AS total FROM booking WHERE idJourney = ?";
+        $stmt = $this->conn->prepare($sql);
+        if (!$stmt) throw new Exception('DB prepare failed: ' . $this->conn->error);
+        $stmt->bind_param('i', $idJourney);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $count = 0;
+        if ($row = $result->fetch_assoc()) {
+            $count = (int)$row['total'];
+        }
+        $stmt->close();
+        return $count;
+    }
+
+    /**
+     * Get bookings for a specific journey with requester contact info
+     * Returns an array of arrays with keys: 'booking' (Booking object) and 'user' (assoc with firstName,lastName,email,phone,cin)
+     */
+    public function getBookingsForJourney($idJourney) {
+        $sql = "SELECT b.*, u.firstName, u.lastName, u.email, u.phone, u.cin
+                FROM booking b
+                LEFT JOIN users u ON b.cinRequester = u.cin
+                WHERE b.idJourney = ?
+                ORDER BY b.bookingDate DESC";
+
+        $stmt = $this->conn->prepare($sql);
+        if (!$stmt) throw new Exception('DB prepare failed: ' . $this->conn->error);
+        $stmt->bind_param('i', $idJourney);
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        $rows = [];
+        while ($r = $result->fetch_assoc()) {
+            $booking = new Booking($r['idJourney'], $r['cinRequester'], $r['requestedSeats'], $r['totalPrice']);
+            $booking->setIdBooking($r['idBooking']);
+            $booking->setBookingDate($r['bookingDate']);
+
+            $rows[] = [
+                'booking' => $booking,
+                'user' => [
+                    'firstName' => $r['firstName'] ?? null,
+                    'lastName' => $r['lastName'] ?? null,
+                    'email' => $r['email'] ?? null,
+                    'phone' => $r['phone'] ?? null,
+                    'cin' => $r['cinRequester'] ?? null,
+                ]
+            ];
+        }
+
+        $stmt->close();
+        return $rows;
+    }
+
+    /**
      * Ajouter une nouvelle réservation
      */
     public function addBooking(Booking $booking) {

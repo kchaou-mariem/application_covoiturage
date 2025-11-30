@@ -156,139 +156,163 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 }
 ?>
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Create Journey</title>
+<?php require_once __DIR__ . '/includes/header.php'; ?>
+
+    <div class="card journey-card">
+        <h2 class="mb-3">Create Journey</h2>
+
+        <form class="journey-form" method="POST" action="createJourney.php">
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Departure City</label>
+                    <select class="form-select" name="departure_city" id="departure_city" onchange="toggleNewCity('departure')" required>
+                        <option value="">-- Choose city --</option>
+                        <?php foreach ($cityManager->findAll() as $city): ?>
+                                <option value="<?= $city->getIdCity() ?>"><?= htmlspecialchars($city->getName()) ?></option>
+                        <?php endforeach; ?>
+                        <option value="new">+ Add new city</option>
+                    </select>
+                    <div id="new_departure_city" style="display:none;" class="mt-2">
+                        <input class="form-control" type="text" name="new_departure_city" placeholder="Enter new city">
+                    </div>
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Departure Delegation</label>
+                    <select class="form-select" name="departure_delegation" id="departure_delegation" onchange="toggleNewDelegation('departure')" required>
+                        <option value="">-- Choose delegation --</option>
+                        <?php foreach ($delegationManager->findAll() as $deleg): ?>
+                                <option value="<?= $deleg->getIdDelegation() ?>"><?= htmlspecialchars($deleg->getName()) ?></option>
+                        <?php endforeach; ?>
+                        <option value="new">+ Add new delegation</option>
+                    </select>
+                    <div id="new_departure_delegation" style="display:none;" class="mt-2">
+                        <input class="form-control" type="text" name="new_departure_delegation" placeholder="Enter new delegation">
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Destination City</label>
+                    <select class="form-select" name="destination_city" id="destination_city" onchange="toggleNewCity('destination')" required>
+                        <option value="">-- Choose city --</option>
+                        <?php foreach ($cityManager->findAll() as $city): ?>
+                                <option value="<?= $city->getIdCity() ?>"><?= htmlspecialchars($city->getName()) ?></option>
+                        <?php endforeach; ?>
+                        <option value="new">+ Add new city</option>
+                    </select>
+                    <div id="new_destination_city" style="display:none;" class="mt-2">
+                        <input class="form-control" type="text" name="new_destination_city" placeholder="Enter new city">
+                    </div>
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Destination Delegation</label>
+                    <select class="form-select" name="destination_delegation" id="destination_delegation" onchange="toggleNewDelegation('destination')" required>
+                        <option value="">-- Choose delegation --</option>
+                        <?php foreach ($delegationManager->findAll() as $deleg): ?>
+                                <option value="<?= $deleg->getIdDelegation() ?>"><?= htmlspecialchars($deleg->getName()) ?></option>
+                        <?php endforeach; ?>
+                        <option value="new">+ Add new delegation</option>
+                    </select>
+                    <div id="new_destination_delegation" style="display:none;" class="mt-2">
+                        <input class="form-control" type="text" name="new_destination_delegation" placeholder="Enter new delegation">
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-3 mb-3">
+                    <label class="form-label">Date</label>
+                    <input class="form-control" type="date" name="date" required>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label class="form-label">Time</label>
+                    <input class="form-control" type="time" name="time" required>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label class="form-label">Price</label>
+                    <input class="form-control" type="number" name="price" min="0" step="0.01" required>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label class="form-label">Seats Available</label>
+                    <input class="form-control" type="number" name="seatsA" min="1" max="8" required>
+                </div>
+            </div>
+
+            <h4 class="mt-3">Car</h4>
+            <div class="mb-3">
+                <label class="form-check-label"><input class="form-check-input me-2" type="checkbox" id="hasCar" name="hasCar" onchange="toggleCarFields()"> I already registered my car</label>
+            </div>
+
+            <div id="existingCar" style="display:none;" class="mb-3">
+                <div class="input-group">
+                    <input class="form-control" type="text" id="immat_existing" name="immat_existing" placeholder="Enter car plate">
+                    <button class="btn btn-outline-secondary" type="button" onclick="fetchCarInfo()">Load Info</button>
+                </div>
+                <div id="car_info_display" class="mt-2"></div>
+            </div>
+
+            <div id="newCar" class="row mb-3">
+                <div class="col-md-6 mb-2"><input class="form-control" type="text" name="carModel" placeholder="Car Model"></div>
+                <div class="col-md-6 mb-2"><input class="form-control" type="text" name="immat" placeholder="License Plate"></div>
+                <div class="col-md-6 mb-2"><input class="form-control" type="text" name="color" placeholder="Color"></div>
+                <div class="col-md-6 mb-2"><input class="form-control" type="number" name="seats" min="1" max="8" placeholder="Seats"></div>
+            </div>
+
+            <h4 class="mt-3">Preferences</h4>
+            <div class="mb-3">
+                <?php foreach ($preferenceManager->findAll() as $pref): ?>
+                        <div class="form-check"><label class="form-check-label"><input class="form-check-input me-2" type="checkbox" name="options[]" value="<?= htmlspecialchars($pref->getLabel()) ?>"> <?= htmlspecialchars($pref->getLabel()) ?></label></div>
+                <?php endforeach; ?>
+            </div>
+
+            <div class="mt-4">
+                <button class="btn btn-primary" type="submit">Create Journey</button>
+            </div>
+        </form>
+    </div>
+
     <script>
         function toggleNewCity(type) {
-            const select = document.getElementById(type + '_city');
-            const div = document.getElementById('new_' + type + '_city');
-            div.style.display = (select.value === 'new') ? 'block' : 'none';
+                const select = document.getElementById(type + '_city');
+                const div = document.getElementById('new_' + type + '_city');
+                div.style.display = (select.value === 'new') ? 'block' : 'none';
         }
 
         function toggleNewDelegation(type) {
-            const select = document.getElementById(type + '_delegation');
-            const div = document.getElementById('new_' + type + '_delegation');
-            div.style.display = (select.value === 'new') ? 'block' : 'none';
+                const select = document.getElementById(type + '_delegation');
+                const div = document.getElementById('new_' + type + '_delegation');
+                div.style.display = (select.value === 'new') ? 'block' : 'none';
         }
 
         function toggleCarFields() {
-            const hasCar = document.getElementById('hasCar').checked;
-            document.getElementById('existingCar').style.display = hasCar ? 'block' : 'none';
-            document.getElementById('newCar').style.display = hasCar ? 'none' : 'block';
+                const hasCar = document.getElementById('hasCar').checked;
+                document.getElementById('existingCar').style.display = hasCar ? 'block' : 'none';
+                document.getElementById('newCar').style.display = hasCar ? 'none' : 'block';
         }
 
         function fetchCarInfo() {
-            const immat = document.getElementById('immat_existing').value.trim();
-            if (!immat) {
-                alert("Please enter a license plate!");
-                return;
-            }
-            fetch('createjourney.php?immat=' + encodeURIComponent(immat))
-                .then(response => response.json())
-                .then(data => {
-                    const display = document.getElementById('car_info_display');
-                    if (data && data.model) {
-                        display.innerHTML = `<p><strong>Model:</strong> ${data.model}</p>
-                                             <p><strong>Color:</strong> ${data.color}</p>
-                                             <p><strong>Seats:</strong> ${data.seats}</p>`;
-                    } else {
-                        display.innerHTML = "<p style='color:red;'>No car found.</p>";
-                    }
-                })
-                .catch(() => alert("Error loading car data."));
+                const immat = document.getElementById('immat_existing').value.trim();
+                if (!immat) {
+                        alert("Please enter a license plate!");
+                        return;
+                }
+                fetch('createJourney.php?immat=' + encodeURIComponent(immat))
+                        .then(response => response.json())
+                        .then(data => {
+                                const display = document.getElementById('car_info_display');
+                                if (data && data.model) {
+                                        display.innerHTML = `<p><strong>Model:</strong> ${data.model}</p>
+                                                                                 <p><strong>Color:</strong> ${data.color}</p>
+                                                                                 <p><strong>Seats:</strong> ${data.seats}</p>`;
+                                } else {
+                                        display.innerHTML = "<p class='text-danger'>No car found.</p>";
+                                }
+                        })
+                        .catch(() => alert("Error loading car data."));
         }
     </script>
-</head>
-<body>
-    <form method="POST" action="createJourney.php">
-        <h2>Create Journey</h2>
 
-        <h3>Departure :</h3>
-        <label>City</label>
-        <select name="departure_city" id="departure_city" onchange="toggleNewCity('departure')" required>
-            <option value="">-- Choose city --</option>
-            <?php foreach ($cityManager->findAll() as $city): ?>
-                <option value="<?= $city->getIdCity() ?>"><?= htmlspecialchars($city->getName()) ?></option>
-            <?php endforeach; ?>
-            <option value="new">+ Add new city</option>
-        </select>
-        <div id="new_departure_city" style="display:none;">
-            <input type="text" name="new_departure_city" placeholder="Enter new city">
-        </div>
-
-        <label>Delegation</label>
-        <select name="departure_delegation" id="departure_delegation" onchange="toggleNewDelegation('departure')" required>
-            <option value="">-- Choose delegation --</option>
-            <?php foreach ($delegationManager->findAll() as $deleg): ?>
-                <option value="<?= $deleg->getIdDelegation() ?>"><?= htmlspecialchars($deleg->getName()) ?></option>
-            <?php endforeach; ?>
-            <option value="new">+ Add new delegation</option>
-        </select>
-        <div id="new_departure_delegation" style="display:none;">
-            <input type="text" name="new_departure_delegation" placeholder="Enter new delegation">
-        </div>
-
-        <h3>Destination :</h3>
-        <label>City</label>
-        <select name="destination_city" id="destination_city" onchange="toggleNewCity('destination')" required>
-            <option value="">-- Choose city --</option>
-            <?php foreach ($cityManager->findAll() as $city): ?>
-                <option value="<?= $city->getIdCity() ?>"><?= htmlspecialchars($city->getName()) ?></option>
-            <?php endforeach; ?>
-            <option value="new">+ Add new city</option>
-        </select>
-        <div id="new_destination_city" style="display:none;">
-            <input type="text" name="new_destination_city" placeholder="Enter new city">
-        </div>
-
-        <label>Delegation</label>
-        <select name="destination_delegation" id="destination_delegation" onchange="toggleNewDelegation('destination')" required>
-            <option value="">-- Choose delegation --</option>
-            <?php foreach ($delegationManager->findAll() as $deleg): ?>
-                <option value="<?= $deleg->getIdDelegation() ?>"><?= htmlspecialchars($deleg->getName()) ?></option>
-            <?php endforeach; ?>
-            <option value="new">+ Add new delegation</option>
-        </select>
-        <div id="new_destination_delegation" style="display:none;">
-            <input type="text" name="new_destination_delegation" placeholder="Enter new delegation">
-        </div>
-
-        <br><label>Date</label>
-        <input type="date" name="date" required>
-        <label>Time</label>
-        <input type="time" name="time" required>
-        <label>Price</label>
-        <input type="number" name="price" min="0" step="0.01" required>
-        <label>Seats Available</label>
-        <input type="number" name="seatsA" min="1" max="8" required>
-
-        <h3>Car</h3>
-        <label><input type="checkbox" id="hasCar" name="hasCar" onchange="toggleCarFields()"> I already registered my car</label>
-
-        <div id="existingCar" style="display:none;">
-            <input type="text" id="immat_existing" name="immat_existing" placeholder="Enter car plate">
-            <button type="button" onclick="fetchCarInfo()">Load Info</button>
-            <div id="car_info_display"></div>
-        </div>
-
-        <div id="newCar">
-            <input type="text" name="carModel" placeholder="Car Model">
-            <input type="text" name="immat" placeholder="License Plate">
-            <input type="text" name="color" placeholder="Color">
-            <input type="number" name="seats" min="1" max="8" placeholder="Seats">
-        </div>
-
-        <h3>Preferences</h3>
-        <?php foreach ($preferenceManager->findAll() as $pref): ?>
-            <label><input type="checkbox" name="options[]" value="<?= htmlspecialchars($pref->getLabel()) ?>"> <?= htmlspecialchars($pref->getLabel()) ?></label><br>
-        <?php endforeach; ?>
-        <!--<label><input type="radio" name="driverGender" value="male"> Male</label>
-        <label><input type="radio" name="driverGender" value="female"> Female</label>-->
-
-        <br><br><button type="submit">Create Journey</button>
-    </form>
-</body>
-</html>
+<?php require_once __DIR__ . '/includes/footer.php'; ?>

@@ -178,6 +178,42 @@ class JourneyManager {
         return $journeys;
     }
 
+    // Find journeys published by a specific user (cinRequester)
+    public function findByRequester($cin) {
+        $sql = "
+            SELECT j.*, 
+                   dep_city.name AS departure_city_name,
+                   dest_city.name AS destination_city_name,
+                   dep_del.name AS departure_delegation_name,
+                   dest_del.name AS destination_delegation_name,
+                   car.model AS car_model, car.immat AS car_immat,
+                   u.firstName AS driver_firstName, u.lastName AS driver_lastName, u.phone AS driver_phone, u.email AS driver_email, u.gender AS driver_gender
+            FROM journey j
+            LEFT JOIN city dep_city ON j.departure = dep_city.idCity
+            LEFT JOIN city dest_city ON j.destination = dest_city.idCity
+            LEFT JOIN delegation dep_del ON j.departureDelegation = dep_del.idDelegation
+            LEFT JOIN delegation dest_del ON j.destinationDelegation = dest_del.idDelegation
+            LEFT JOIN car ON j.immatCar = car.immat
+            LEFT JOIN users u ON j.cinRequester = u.cin
+            WHERE j.cinRequester = ?
+            ORDER BY j.depDate DESC, j.depTime DESC
+        ";
+
+        $stmt = $this->conn->prepare($sql);
+        if (!$stmt) throw new Exception('DB prepare failed: ' . $this->conn->error);
+        $stmt->bind_param('s', $cin);
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        $journeys = [];
+        while ($data = $result->fetch_assoc()) {
+            $journeys[] = $this->hydrateJourney($data);
+        }
+
+        $stmt->close();
+        return $journeys;
+    }
+
     // Compter les trajets
     public function count() {
         $result = $this->conn->query("SELECT COUNT(*) AS total FROM journey");
@@ -186,7 +222,7 @@ class JourneyManager {
     }
 
     // === Méthodes utilitaires ===
-    private function hydrateJourney($data) {
+    private function hydrateJourney($data) { //Transforme un tableau associatif $data en objet Journey
         $journey = new Journey(
             $data['idJourney'],
             $data['price'],

@@ -168,6 +168,12 @@ function insertUser($mysqli, $userData) {
 // MAIN LOGIC
 // =============================================
 
+// If the script is reached without POST (GET), redirect to the HTML registration form
+if ($_SERVER["REQUEST_METHOD"] !== "POST") {
+    header('Location: inscription.html');
+    exit;
+}
+
 // Check if form was submitted
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // Collect form data
