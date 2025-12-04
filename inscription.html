@@ -32,13 +32,32 @@
             <h2 class="mb-3">Create an account</h2>
             <form class="auth-form row g-3" method="post" action="inscription.php" onsubmit="return validateForm()">
 
+                
+                <div class="col-md-8">
+                    <label class="form-label">Account Type</label>
+                    <div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="role" id="roleUser" value="user" checked>
+                            <label class="form-check-label" for="roleUser">
+                                <i class="fas fa-user me-1"></i> User
+                            </label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="role" id="roleAdmin" value="admin">
+                            <label class="form-check-label" for="roleAdmin">
+                                <i class="fas fa-user-shield me-1"></i> Admin
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="col-md-6">
-                    <label for="firstName" class="form-label">Prénom</label>
+                    <label for="firstName" class="form-label">First Name</label>
                     <input type="text" class="form-control" id="firstName" name="firstName" required pattern="[a-zA-ZÀ-ÿ\-\s]{2,50}" title="2-50 caracters">
                 </div>
 
                 <div class="col-md-6">
-                    <label for="lastName" class="form-label">Nom</label>
+                    <label for="lastName" class="form-label">Last Name</label>
                     <input type="text" class="form-control" id="lastName" name="lastName" required pattern="[a-zA-ZÀ-ÿ\-\s]{2,50}" title="2-50 caracters">
                 </div>
 
@@ -60,10 +79,11 @@
                 <div class="col-md-6">
                     <label class="form-label">Genre</label>
                     <div>
-                        <div class="form-check form-check-inline"><input class="form-check-input" type="radio" name="gender" value="male"><label class="form-check-label">Homme</label></div>
-                        <div class="form-check form-check-inline"><input class="form-check-input" type="radio" name="gender" value="female"><label class="form-check-label">Femme</label></div>
+                        <div class="form-check form-check-inline"><input class="form-check-input" type="radio" name="gender" value="male" required><label class="form-check-label">Homme</label></div>
+                        <div class="form-check form-check-inline"><input class="form-check-input" type="radio" name="gender" value="female" required><label class="form-check-label">Femme</label></div>
                     </div>
                 </div>
+
 
                 <div class="col-md-6">
                       <label for="password" class="form-label">Password</label>
@@ -84,6 +104,10 @@
 
                 <div class="col-12">
                       <button type="submit" class="btn btn-primary btn-full">Create account</button>
+                </div>
+                
+                <div class="col-12 text-center mt-3">
+                    <p class="text-muted">Already have an account? <a href="authentification.php" class="text-primary fw-bold">Login here</a></p>
                 </div>
 
             </form>

@@ -59,6 +59,17 @@ function validateGender($gender) {
 }
 
 /**
+ * Validate role selection
+ */
+function validateRole($role) {
+    $allowedRoles = ['user', 'admin'];
+    if (!empty($role) && !in_array($role, $allowedRoles)) {
+        return "Selected role is not valid";
+    }
+    return null;
+}
+
+/**
  * Validate password strength and confirmation
  */
 function validatePassword($password, $confirmPassword) {
@@ -143,19 +154,20 @@ function checkAllDuplicates($mysqli, $cin, $email, $phone) {
  * Insert new user into database
  */
 function insertUser($mysqli, $userData) {
-    $sql = "INSERT INTO users (cin, email, firstName, lastName, gender, password, phone) 
-            VALUES (?, ?, ?, ?, ?, ?, ?)";
+    $sql = "INSERT INTO users (cin, email, firstName, lastName, gender, password, phone, role, status) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'active')";
     
     $stmt = $mysqli->prepare($sql);
     $stmt->bind_param(
-        "sssssss", 
+        "ssssssss", 
         $userData['cin'],
         $userData['email'],
         $userData['firstName'],
         $userData['lastName'],
         $userData['gender'],
         $userData['password_hash'],
-        $userData['phone']
+        $userData['phone'],
+        $userData['role']
     );
     
     $result = $stmt->execute();
@@ -184,6 +196,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         'cin' => $_POST['cin'] ?? '',
         'phone' => $_POST['phone'] ?? '',
         'gender' => $_POST['gender'] ?? '',
+        'role' => $_POST['role'] ?? 'user',
         'password' => $_POST['password'] ?? '',
         'confirmPassword' => $_POST['confirmPassword'] ?? ''
     ];
@@ -222,6 +235,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $errors['gender'] = $error;
     }
     
+    // Validate role
+    if ($error = validateRole($userData['role'])) {
+        $errors['role'] = $error;
+    }
+    
     // Validate password
     $passwordErrors = validatePassword($userData['password'], $userData['confirmPassword']);
     if (!empty($passwordErrors)) {
@@ -245,49 +263,43 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             
             // Insert user into database
             if (insertUser($mysqli, $userData)) {
-                // SUCCESS MESSAGE
-                echo "<div style='color: green; border: 1px solid green; padding: 10px; margin: 10px 0;'>";
-                echo "<h3>✅ User created successfully!</h3>";
-                echo "<p>Hello " . htmlspecialchars($userData['firstName'] ?: $userData['email']) . ".</p>";
-                echo "<ul>";
-                echo "<li>First Name: " . htmlspecialchars($userData['firstName']) . "</li>";
-                echo "<li>Last Name: " . htmlspecialchars($userData['lastName']) . "</li>";
-                echo "<li>CIN: " . htmlspecialchars($userData['cin']) . "</li>";
-                echo "<li>Email: " . htmlspecialchars($userData['email']) . "</li>";
-                echo "<li>Phone: " . htmlspecialchars($userData['phone']) . "</li>";
-                echo "<li>Gender: " . htmlspecialchars($userData['gender']) . "</li>";
-                echo "</ul>";
+                // Close database connection
+                mysqli_close($mysqli);
                 
-                // Mask password for display
-                $masked = str_repeat('*', max(4, min(12, strlen($userData['password']))));
-                echo "<p>Password: $masked (length: " . strlen($userData['password']) . " characters)</p>";
-                echo "</div>";
-                
+                // Redirect to login page after successful registration
+                header('Location: authentification.php?registered=1');
+                exit;
             } else {
-                throw new Exception("Error inserting into database");
+                throw new Exception("Error inserting into database: " . $mysqli->error);
             }
             
-            // Close database connection
-            mysqli_close($mysqli);
-            
         } catch (Exception $e) {
-            // ERROR HANDLING
-            echo "<div style='color: red; border: 1px solid red; padding: 10px; margin: 10px 0;'>";
-            echo "<h3>❌ Error:</h3>";
+            // Close database connection if open
+            if (isset($mysqli)) {
+                mysqli_close($mysqli);
+            }
+            
+            // Display error for debugging
+            echo "<div style='color: red; border: 1px solid red; padding: 10px; margin: 10px;'>";
+            echo "<h3>❌ Registration Error</h3>";
             echo "<p>" . htmlspecialchars($e->getMessage()) . "</p>";
+            echo "<a href='inscription.html'>Back to registration</a>";
             echo "</div>";
+            exit;
         }
         
     } else {
-        // DISPLAY VALIDATION ERRORS
-        echo "<div style='color: red; border: 1px solid red; padding: 10px; margin: 10px 0;'>";
-        echo "<h3>Validation errors:</h3>";
+        // Display validation errors
+        echo "<div style='color: red; border: 1px solid red; padding: 10px; margin: 10px;'>";
+        echo "<h3>❌ Validation Errors</h3>";
         echo "<ul>";
         foreach ($errors as $field => $error) {
             echo "<li><strong>" . htmlspecialchars($field) . ":</strong> " . htmlspecialchars($error) . "</li>";
         }
         echo "</ul>";
+        echo "<a href='inscription.html'>Back to registration</a>";
         echo "</div>";
+        exit;
     }
 }
 ?>

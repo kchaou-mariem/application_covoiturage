@@ -51,7 +51,7 @@ function connectToDatabase() {
  * vérifie le compte et le mot de passe d’un utilisateur pour valider sa connexion
  */
 function authenticateUser($mysqli, $email, $password) {
-    $sql = "SELECT cin, email, password, firstName, lastName FROM users WHERE email = ?";
+    $sql = "SELECT cin, email, password, firstName, lastName, role, status FROM users WHERE email = ?";
     
     $stmt = $mysqli->prepare($sql);
     if (!$stmt) {
@@ -71,10 +71,18 @@ function authenticateUser($mysqli, $email, $password) {
         ];
     }
     
-    // Get user data (note: the first column is the user's CIN)
-    $stmt->bind_result($cin, $db_email, $db_password, $firstName, $lastName);
+    // Get user data
+    $stmt->bind_result($cin, $db_email, $db_password, $firstName, $lastName, $role, $status);
     $stmt->fetch();
     $stmt->close();
+    
+    // Check if account is blocked
+    if ($status === 'blocked') {
+        return [
+            'success' => false,
+            'message' => "Your account has been blocked. Please contact administrator."
+        ];
+    }
     
     // Verify password
     if (password_verify($password, $db_password)) {
@@ -84,7 +92,9 @@ function authenticateUser($mysqli, $email, $password) {
                 'cin' => $cin,
                 'email' => $db_email,
                 'firstName' => $firstName,
-                'lastName' => $lastName
+                'lastName' => $lastName,
+                'role' => $role ?? 'user',
+                'status' => $status ?? 'active'
             ]
         ];
     } else {
@@ -158,12 +168,20 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 $_SESSION['user_firstName'] = $authResult['user']['firstName'];
                 $_SESSION['user_lastName'] = $authResult['user']['lastName'];
                 $_SESSION['user_name'] = $authResult['user']['firstName'] . ' ' . $authResult['user']['lastName'];
+                $_SESSION['user_role'] = $authResult['user']['role'] ?? 'user';
+                $_SESSION['user_status'] = $authResult['user']['status'] ?? 'active';
                 $_SESSION['logged_in'] = true;
                 $_SESSION['login_time'] = time();
 
-                // On successful login, redirect to trajets.php
+                // On successful login, redirect based on role
                 if (session_status() == PHP_SESSION_NONE) session_start();
-                header('Location: trajets.php');
+                
+                // Redirect admin to admin dashboard
+                if ($_SESSION['user_role'] === 'admin') {
+                    header('Location: admin_dashboard.php');
+                } else {
+                    header('Location: trajets.php');
+                }
                 exit;
                 
             } else {

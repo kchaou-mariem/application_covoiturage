@@ -42,7 +42,23 @@ if ($count > 0) {
 }
 
 try {
+    // Get journey details before deletion for email
+    require_once 'Manager/CityManager.php';
+    $cityManager = new CityManager($conn);
+    
+    $depCity = $cityManager->findById($journey->getDeparture());
+    $destCity = $cityManager->findById($journey->getDestination());
+    
+    $journeyDetails = [
+        'from' => $depCity ? $depCity->getName() : 'Unknown',
+        'to' => $destCity ? $destCity->getName() : 'Unknown',
+        'date' => $journey->getDepDate(),
+        'time' => substr($journey->getDepTime(), 0, 5)
+    ];
+    
+    // Delete the journey
     $journeyManager->delete($id);
+    
     header('Location: my_trajets.php?msg=' . urlencode('Trajet supprimé avec succès'));
     exit;
 } catch (Exception $e) {

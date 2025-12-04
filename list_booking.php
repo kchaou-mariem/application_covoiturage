@@ -120,6 +120,11 @@ $stmt->close();
                             
                             <div class="price"><?php echo $booking['totalPrice']; ?> DT</div>
                             
+                            <div class="card-actions mt-2">
+                                <a href="booking_confirmation.php?id=<?php echo $booking['idBooking']; ?>" class="btn-view">
+                                    <i class="fas fa-file-invoice"></i> View Confirmation
+                                </a>
+                            </div>
                             
                         </div>
                     <?php endforeach; ?>
@@ -165,6 +170,11 @@ $stmt->close();
                             
                             <div class="price"><?php echo $booking['totalPrice']; ?> DT</div>
                             
+                            <div class="card-actions mt-2">
+                                <a href="booking_confirmation.php?id=<?php echo $booking['idBooking']; ?>" class="btn-view">
+                                    <i class="fas fa-file-invoice"></i> View Confirmation
+                                </a>
+                            </div>
                             
                         </div>
                     <?php endforeach; ?>

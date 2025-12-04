@@ -22,6 +22,25 @@ a{color:var(--primary);text-decoration:none}
 .nav-links a:hover{background:rgba(13,110,253,0.06)}
 .user-badge{background:#eef2ff;padding:6px 10px;border-radius:8px;color:#3730a3}
 
+/* User dropdown in navbar */
+.dropdown{position:relative;display:inline-block}
+.user-dropdown-btn{background:#eef2ff;border:1px solid rgba(13,110,253,0.1);padding:6px 12px;border-radius:8px;color:#3730a3;cursor:pointer;font-size:14px;display:flex;align-items:center;gap:6px;transition:all 0.2s}
+.user-dropdown-btn:hover{background:#e0e7ff;border-color:rgba(13,110,253,0.2)}
+.user-dropdown-btn i.fa-user-circle{font-size:16px}
+.user-dropdown-btn i.fa-chevron-down{font-size:11px;opacity:0.7}
+.dropdown-menu{min-width:200px;box-shadow:0 4px 12px rgba(0,0,0,0.1);border:1px solid rgba(0,0,0,0.06);border-radius:8px;padding:8px 0}
+.dropdown-item{padding:10px 16px;display:flex;align-items:center;gap:10px;color:#1f2937;transition:background 0.15s}
+.dropdown-item:hover{background:#f3f4f6}
+.dropdown-item i{width:16px}
+.dropdown-item.text-danger{color:#dc3545}
+.dropdown-item.text-danger:hover{background:#fee}
+.dropdown-divider{margin:8px 0;border-top:1px solid rgba(0,0,0,0.06)}
+
+/* Cart icon in navbar */
+.nav-links a.cart-link{position:relative;display:inline-flex;align-items:center;justify-content:center;padding:8px 12px}
+.nav-links a.cart-link i{font-size:18px}
+.cart-badge{position:absolute;top:2px;right:4px;background:#dc3545;color:white;border-radius:50%;width:18px;height:18px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;line-height:1}
+
 /* Search link in navbar - prominent pill */
 /* Make Search look like other nav links (less prominent) */
 .nav-links a.nav-search{display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border-radius:8px;color:#0b5ed7;font-weight:600;background:transparent;border:0}
@@ -40,9 +59,13 @@ a{color:var(--primary);text-decoration:none}
 .search-form select,.search-form input[type="date"],.search-form input[type="number"],.search-form input[type="time"]{padding:10px;border-radius:8px;border:1px solid rgba(15,23,42,0.06);min-height:44px}
 .search-form .btn-search{background:linear-gradient(90deg,var(--primary),#0a58ca);color:#fff;padding:10px 14px;border-radius:10px;border:none}
 
-.search-results{max-width:1100px;margin:18px auto;display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px}
-.result-item{background:#fff;border-radius:12px;padding:14px;box-shadow:0 10px 28px rgba(2,6,23,0.05);display:flex;flex-direction:column}
-.result-item p{margin:6px 0}
+.search-results{max-width:1100px;margin:18px auto;display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:20px}
+.result-item{background:#fff;border-radius:12px;border:1px solid rgba(15,23,42,0.06);transition:transform 0.2s,box-shadow 0.2s}
+.result-item:hover{transform:translateY(-4px);box-shadow:0 12px 32px rgba(2,6,23,0.12)}
+.result-item .card-header{background:#f8f9fa;border-bottom:1px solid rgba(0,0,0,0.06);padding:12px 16px}
+.result-item .card-header h5{font-size:1rem;color:#1f2937}
+.result-item .card-body{padding:16px}
+.result-item .driver-info{background:#f8f9fa;padding:10px;border-radius:6px}
 .status-available{color:#0b5ed7;font-weight:700}
 .status-full{color:#dc3545;font-weight:700}
 .btn-active{background:linear-gradient(90deg,#f0ad4e,#f59e0b);color:#fff;padding:8px 12px;border-radius:8px;text-decoration:none;display:inline-block}
@@ -50,6 +73,7 @@ a{color:var(--primary);text-decoration:none}
 
 @media (max-width:600px){
   .search-form .form-row{flex-direction:column}
+  .search-results{grid-template-columns:1fr}
 }
 
 /* Card header tweaks for trajets */
@@ -98,6 +122,13 @@ footer.site-footer{margin-top:40px;padding:20px 0;background:#fff;border-top:1px
 .cart-item{border:1px solid rgba(15,23,42,0.06);border-radius:8px;padding:12px}
 .cart-item .journey-price{font-weight:700;color:var(--primary)}
 .cart-actions{min-width:170px}
+
+/* Profile page styles */
+.profile-card{max-width:900px;margin:0 auto;border-radius:12px;box-shadow:0 8px 24px rgba(15,23,42,0.06)}
+.profile-card .card-header{border-radius:12px 12px 0 0;padding:16px 20px}
+.profile-card .card-body{padding:24px}
+.profile-card .form-label{margin-bottom:6px}
+.profile-card .form-label i{margin-right:6px;color:var(--primary);opacity:0.8}
 .cart-item .form-control{max-width:160px}
 
 /* Price badge in journey card header: make text black and visible */

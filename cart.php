@@ -124,6 +124,36 @@ if (isset($_GET['remove'])) {
         </div>
     </div>
 
+    <!-- Modal de confirmation de paiement -->
+    <div class="modal fade" id="confirmPaymentModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title"><i class="fas fa-credit-card"></i> Confirm Your Booking</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="fw-bold mb-3">Please confirm your booking:</p>
+                    <div id="bookingDetails" class="mb-3"></div>
+                    <hr>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="fw-bold fs-5">Total:</span>
+                        <span class="fw-bold fs-4 text-success" id="totalAmount">0 DT</span>
+                    </div>
+                    <p class="text-muted small mt-2">Proceed to payment?</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times"></i> Cancel
+                    </button>
+                    <button type="button" class="btn btn-success" id="confirmPaymentBtn">
+                        <i class="fas fa-check"></i> Confirm & Pay
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
 <?php require_once __DIR__ . '/includes/footer.php'; ?>
 <script>
 // Confirmation before submitting payment
@@ -151,19 +181,41 @@ document.addEventListener('DOMContentLoaded', function () {
         });
 
         if (items.length === 0) {
-            alert('Please enter number of seats for at least one journey.');
+            const alertDiv = document.createElement('div');
+            alertDiv.className = 'alert alert-warning alert-dismissible fade show';
+            alertDiv.innerHTML = '<strong><i class="fas fa-exclamation-triangle"></i> Warning:</strong> Please enter number of seats for at least one journey. <button type="button" class="btn-close" data-bs-dismiss="alert"></button>';
+            document.querySelector('.cart-card').insertBefore(alertDiv, document.querySelector('.cart-card').firstChild);
             return;
         }
 
-        let msg = 'Please confirm your booking:\n\n';
+        // Construire le contenu du modal
+        let detailsHTML = '<div class="list-group">';
         items.forEach(function (it) {
-            msg += it.route + ': ' + it.seats + ' × ' + it.price + ' = ' + it.subtotal + '\n';
+            detailsHTML += `
+                <div class="list-group-item">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <div class="fw-bold text-primary">${it.route}</div>
+                            <small class="text-muted">${it.seats} × ${it.price} DT</small>
+                        </div>
+                        <span class="badge bg-success rounded-pill fs-6">${it.subtotal} DT</span>
+                    </div>
+                </div>
+            `;
         });
-        msg += '\nTotal: ' + total + ' DT\n\nProceed to payment?';
+        detailsHTML += '</div>';
 
-        if (confirm(msg)) {
-            form.submit();
-        }
+        document.getElementById('bookingDetails').innerHTML = detailsHTML;
+        document.getElementById('totalAmount').textContent = total + ' DT';
+
+        // Afficher le modal
+        const modal = new bootstrap.Modal(document.getElementById('confirmPaymentModal'));
+        modal.show();
+    });
+
+    // Bouton de confirmation dans le modal
+    document.getElementById('confirmPaymentBtn').addEventListener('click', function() {
+        form.submit();
     });
 });
 </script>

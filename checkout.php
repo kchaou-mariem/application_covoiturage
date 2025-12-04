@@ -60,6 +60,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 $bookingManager = new BookingManager($conn);
 $messages = [];
 $successCount = 0;
+$lastBookingId = null;
 
 $conn->begin_transaction();
 try {
@@ -103,7 +104,10 @@ try {
 
         // Créer réservation
         $booking = new Booking($idJourney, $cinRequester, $requestedSeats, $totalPrice);
-        $bookingManager->addBooking($booking);
+        $bookingId = $bookingManager->addBooking($booking);
+        
+        // Stocker le dernier ID de réservation pour la redirection
+        $lastBookingId = $bookingId;
 
         // Mettre à jour les places
         $bookingManager->updateAvailableSeats($idJourney, $requestedSeats);
@@ -116,8 +120,12 @@ try {
     $conn->commit();
     if ($successCount > 0) {
         unset($_SESSION['cart']);
-        // Redirect to trajets page immediately after successful booking
-        header('Location: trajets.php');
+        // Rediriger vers la page de confirmation avec le dernier ID de réservation
+        if ($lastBookingId) {
+            header('Location: booking_confirmation.php?id=' . $lastBookingId);
+        } else {
+            header('Location: list_booking.php?success=1');
+        }
         exit();
     }
 

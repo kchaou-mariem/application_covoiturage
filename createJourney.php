@@ -32,6 +32,9 @@ if (isset($_GET['immat'])) {
     exit;
 }
 
+$errorMessage = '';
+$successMessage = '';
+
 // --- Traitement du formulaire ---
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $departure = $_POST['departure_city'];
@@ -79,8 +82,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if ($hasCar && !empty($_POST['immat_existing'])) {
         $immat = trim($_POST['immat_existing']);
         if (!$carManager->existsByImmat($immat)) {
-            echo "<script>alert('❌ No car found with this license plate.');</script>";
-            exit;
+            $errorMessage = 'No car found with this license plate.';
         }
     } else {
         $model = $_POST['carModel'];
@@ -100,26 +102,24 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $preferencesJson = json_encode($preferences, JSON_UNESCAPED_UNICODE);
 
     // === Validations ===
-    if ($price < 0) {
-        echo "<script>alert('❌ Price cannot be negative!');</script>";
-        exit;
+    if (empty($errorMessage) && $price < 0) {
+        $errorMessage = 'Price cannot be negative!';
     }
 
-    if ($departure == $destination) {
-        echo "<script>alert('❌ Departure and destination cannot be the same!');</script>";
-        exit;
+    if (empty($errorMessage) && $departure == $destination) {
+        $errorMessage = 'Departure and destination cannot be the same!';
     }
 
     $today = date('Y-m-d');
-    if ($departureDate < $today) {
-        echo "<script>alert('❌ Departure date cannot be in the past!');</script>";
-        exit;
+    if (empty($errorMessage) && $departureDate < $today) {
+        $errorMessage = 'Departure date cannot be in the past!';
     }
 
-    $carSeats = $carManager->getSeatsByImmat($immat);
-    if ($seatsA > $carSeats) {
-        echo "<script>alert('❌ Seats available cannot exceed car seats!');</script>";
-        exit;
+    if (empty($errorMessage)) {
+        $carSeats = $carManager->getSeatsByImmat($immat);
+        if ($seatsA > $carSeats) {
+            $errorMessage = 'Seats available cannot exceed car seats!';
+        }
     }
 
     // === Enregistrer le trajet ===
@@ -148,15 +148,31 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
 
 
-    if ($journeyManager->create($journey)) {
-        echo "<script>alert('✅ Journey created successfully!');</script>";
-    } else {
-        echo "<script>alert('❌ Error creating journey.');</script>";
+    if (empty($errorMessage)) {
+        if ($journeyManager->create($journey)) {
+            $successMessage = 'Journey created successfully!';
+        } else {
+            $errorMessage = 'Error creating journey.';
+        }
     }
 }
 ?>
 
 <?php require_once __DIR__ . '/includes/header.php'; ?>
+
+    <?php if (!empty($errorMessage)): ?>
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <strong>❌ Error:</strong> <?= htmlspecialchars($errorMessage) ?>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    <?php endif; ?>
+    
+    <?php if (!empty($successMessage)): ?>
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <strong>✅ Success:</strong> <?= htmlspecialchars($successMessage) ?>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    <?php endif; ?>
 
     <div class="card journey-card">
         <h2 class="mb-3">Create Journey</h2>

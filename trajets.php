@@ -238,18 +238,87 @@ $cities = $cityManager->findAll();
         </div>
     </div>
 
+    <!-- Modal de confirmation pour réservation -->
+    <div class="modal fade" id="confirmReserveModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title"><i class="fas fa-calendar-check"></i> Confirm Reservation</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="mb-0">Do you want to reserve this journey?</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times"></i> Cancel
+                    </button>
+                    <button type="button" class="btn btn-primary" id="confirmReserveBtn">
+                        <i class="fas fa-check"></i> Confirm
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de confirmation pour panier -->
+    <div class="modal fade" id="confirmCartModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title"><i class="fas fa-shopping-cart"></i> Add to Cart</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="mb-0">Do you want to add this journey to your cart?</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times"></i> Cancel
+                    </button>
+                    <button type="button" class="btn btn-success" id="confirmCartBtn">
+                        <i class="fas fa-check"></i> Add
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
+        let currentJourneyId = null;
+
         // Fonction pour réserver un trajet
         function reserverTrajet(idJourney) {
-            if (confirm('Voulez-vous vraiment réserver ce trajet ?')) {
-                window.location.href = 'reserver.php?id=' + idJourney;
-            }
+            currentJourneyId = idJourney;
+            const modal = new bootstrap.Modal(document.getElementById('confirmReserveModal'));
+            modal.show();
         }
+
+        // Confirmation de la réservation
+        document.getElementById('confirmReserveBtn').addEventListener('click', function() {
+            if (currentJourneyId) {
+                window.location.href = 'reserver.php?id=' + currentJourneyId;
+            }
+        });
 
         // Fonction pour afficher les détails d'un trajet
         function afficherDetails(idJourney) {
             window.location.href = 'details_trajet.php?id=' + idJourney;
         }
+
+        // Confirmation ajout panier
+        function confirmAddToCart(id) {
+            currentJourneyId = id;
+            const modal = new bootstrap.Modal(document.getElementById('confirmCartModal'));
+            modal.show();
+        }
+
+        // Confirmation d'ajout au panier
+        document.getElementById('confirmCartBtn').addEventListener('click', function() {
+            if (currentJourneyId) {
+                window.location.href = 'cart.php?add=' + currentJourneyId;
+            }
+        });
 
         // Animation au chargement de la page
         document.addEventListener('DOMContentLoaded', function() {
@@ -263,17 +332,8 @@ $cities = $cityManager->findAll();
                     card.style.transform = 'translateY(0)';
                 }, index * 100);
             });
-        });
 
-        // Confirmation ajout panier (FR)
-        function confirmAddToCart(id) {
-            if (confirm('Voulez-vous ajouter ce trajet au panier ?')) {
-                window.location.href = 'cart.php?add=' + id;
-            }
-        }
-
-        // Attach click handler to add-to-cart buttons (safer than inline handlers)
-        document.addEventListener('DOMContentLoaded', function() {
+            // Attach click handler to add-to-cart buttons
             document.querySelectorAll('.add-to-cart-link').forEach(function(el) {
                 el.addEventListener('click', function(evt) {
                     evt.preventDefault();
