@@ -241,11 +241,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             <div class="row">
                 <div class="col-md-3 mb-3">
                     <label class="form-label">Date</label>
-                    <input class="form-control" type="date" name="date" required>
+                    <input class="form-control" type="date" name="date" id="journeyDate" required>
+                    <div class="invalid-feedback">Date must be today or in the future</div>
                 </div>
                 <div class="col-md-3 mb-3">
                     <label class="form-label">Time</label>
-                    <input class="form-control" type="time" name="time" required>
+                    <input class="form-control" type="time" name="time" id="journeyTime" required>
+                    <div class="invalid-feedback">Time must be in the future</div>
                 </div>
                 <div class="col-md-3 mb-3">
                     <label class="form-label">Price</label>
@@ -329,6 +331,51 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                         })
                         .catch(() => alert("Error loading car data."));
         }
+
+        // Validation de la date et l'heure
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.querySelector('form');
+            const dateInput = document.getElementById('journeyDate');
+            const timeInput = document.getElementById('journeyTime');
+            
+            // Définir la date minimale à aujourd'hui
+            const today = new Date().toISOString().split('T')[0];
+            dateInput.setAttribute('min', today);
+            
+            // Validation en temps réel
+            dateInput.addEventListener('change', validateDateTime);
+            timeInput.addEventListener('change', validateDateTime);
+            
+            // Validation avant soumission
+            form.addEventListener('submit', function(e) {
+                if (!validateDateTime()) {
+                    e.preventDefault();
+                    alert('Please select a date and time in the future!');
+                }
+            });
+            
+            function validateDateTime() {
+                const selectedDate = dateInput.value;
+                const selectedTime = timeInput.value;
+                
+                if (!selectedDate || !selectedTime) {
+                    return true;
+                }
+                
+                const now = new Date();
+                const selected = new Date(selectedDate + 'T' + selectedTime);
+                
+                if (selected <= now) {
+                    dateInput.classList.add('is-invalid');
+                    timeInput.classList.add('is-invalid');
+                    return false;
+                } else {
+                    dateInput.classList.remove('is-invalid');
+                    timeInput.classList.remove('is-invalid');
+                    return true;
+                }
+            }
+        });
     </script>
 
 <?php require_once __DIR__ . '/includes/footer.php'; ?>

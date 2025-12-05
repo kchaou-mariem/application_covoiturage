@@ -13,9 +13,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Création d'une ville
     if (isset($_POST['create_city'])) {
         $cityName = $_POST['city_name'];
-        $delegationId = $_POST['delegation_id'];
-        $stmt = $conn->prepare("INSERT INTO city (name, idDelegation) VALUES (?, ?)");
-        $stmt->bind_param("si", $cityName, $delegationId);
+        $stmt = $conn->prepare("INSERT INTO city (name) VALUES (?)");
+        $stmt->bind_param("s", $cityName);
         if ($stmt->execute()) {
             $message = "City created successfully";
         } else {
@@ -37,12 +36,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
     // Création d'une voiture
     if (isset($_POST['create_car'])) {
-        $carType = $_POST['car_type'];
-        $carModel = $_POST['car_model'];
-        $carMatricule = $_POST['car_matricule'];
-        $cinOwner = $_POST['cin_owner'];
-        $stmt = $conn->prepare("INSERT INTO car (type, model, matricule, cinOwner) VALUES (?, ?, ?, ?)");
-        $stmt->bind_param("ssss", $carType, $carModel, $carMatricule, $cinOwner);
+        $immat = $_POST['immat'];
+        $color = $_POST['color'];
+        $model = $_POST['model'];
+        $seats = $_POST['seats'];
+        $stmt = $conn->prepare("INSERT INTO car (immat, color, model, seats) VALUES (?, ?, ?, ?)");
+        $stmt->bind_param("sssi", $immat, $color, $model, $seats);
         if ($stmt->execute()) {
             $message = "Car created successfully";
         } else {
@@ -337,7 +336,7 @@ require_once __DIR__ . '/includes/header.php';
                 <h5 class="modal-title"><i class="fas fa-route me-2"></i>Create Journey</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <form method="POST">
+            <form method="POST" id="createJourneyForm">
                 <div class="modal-body">
                     <div class="row g-3">
                         <div class="col-md-6">
@@ -360,11 +359,13 @@ require_once __DIR__ . '/includes/header.php';
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">Date *</label>
-                            <input type="date" class="form-control" name="depDate" required>
+                            <input type="date" class="form-control" name="depDate" id="createDepDate" required>
+                            <div class="invalid-feedback">Date must be today or in the future</div>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">Time *</label>
-                            <input type="time" class="form-control" name="depTime" required>
+                            <input type="time" class="form-control" name="depTime" id="createDepTime" required>
+                            <div class="invalid-feedback">Time must be in the future</div>
                         </div>
                         <div class="col-md-4">
                             <label class="form-label">Number of Seats *</label>
@@ -408,16 +409,8 @@ require_once __DIR__ . '/includes/header.php';
                 <div class="modal-body">
                     <div class="mb-3">
                         <label class="form-label">City Name *</label>
-                        <input type="text" class="form-control" name="city_name" required>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Delegation *</label>
-                        <select class="form-select" name="delegation_id" required>
-                            <option value="">Select delegation...</option>
-                            <?php foreach ($delegations as $delegation): ?>
-                                <option value="<?= $delegation['idDelegation'] ?>"><?= htmlspecialchars($delegation['name']) ?></option>
-                            <?php endforeach; ?>
-                        </select>
+                        <input type="text" class="form-control" name="city_name" placeholder="e.g., Tunis, Sfax, Sousse" required>
+                        <small class="text-muted">City name must be unique</small>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -468,25 +461,20 @@ require_once __DIR__ . '/includes/header.php';
             <form method="POST">
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label class="form-label">Car Type *</label>
-                        <input type="text" class="form-control" name="car_type" placeholder="e.g., Sedan, SUV" required>
+                        <label class="form-label">Immatriculation (License Plate) *</label>
+                        <input type="text" class="form-control" name="immat" placeholder="e.g., 123 TU 4567" required>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Car Model *</label>
-                        <input type="text" class="form-control" name="car_model" placeholder="e.g., Peugeot 208" required>
+                        <label class="form-label">Color *</label>
+                        <input type="text" class="form-control" name="color" placeholder="e.g., Black, White, Red" required>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Matricule *</label>
-                        <input type="text" class="form-control" name="car_matricule" placeholder="e.g., 123 TU 4567" required>
+                        <label class="form-label">Model *</label>
+                        <input type="text" class="form-control" name="model" placeholder="e.g., Peugeot 208, Renault Clio" required>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Owner *</label>
-                        <select class="form-select" name="cin_owner" required>
-                            <option value="">Select owner...</option>
-                            <?php foreach ($users as $user): ?>
-                                <option value="<?= $user['cin'] ?>"><?= htmlspecialchars($user['firstName'] . ' ' . $user['lastName']) ?></option>
-                            <?php endforeach; ?>
-                        </select>
+                        <label class="form-label">Number of Seats *</label>
+                        <input type="number" class="form-control" name="seats" min="1" max="9" placeholder="e.g., 4" required>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -525,5 +513,58 @@ require_once __DIR__ . '/includes/header.php';
     color: #0d6efd;
 }
 </style>
+
+<script>
+// Validation de la date et l'heure pour le formulaire de création
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('createJourneyForm');
+    const dateInput = document.getElementById('createDepDate');
+    const timeInput = document.getElementById('createDepTime');
+    
+    // Définir la date minimale à aujourd'hui
+    const today = new Date().toISOString().split('T')[0];
+    dateInput.setAttribute('min', today);
+    
+    // Validation en temps réel de la date
+    dateInput.addEventListener('change', function() {
+        validateDateTime();
+    });
+    
+    // Validation en temps réel de l'heure
+    timeInput.addEventListener('change', function() {
+        validateDateTime();
+    });
+    
+    // Validation avant soumission
+    form.addEventListener('submit', function(e) {
+        if (!validateDateTime()) {
+            e.preventDefault();
+            alert('Please select a date and time in the future!');
+        }
+    });
+    
+    function validateDateTime() {
+        const selectedDate = dateInput.value;
+        const selectedTime = timeInput.value;
+        
+        if (!selectedDate || !selectedTime) {
+            return true; // Laisser la validation HTML required gérer les champs vides
+        }
+        
+        const now = new Date();
+        const selected = new Date(selectedDate + 'T' + selectedTime);
+        
+        if (selected <= now) {
+            dateInput.classList.add('is-invalid');
+            timeInput.classList.add('is-invalid');
+            return false;
+        } else {
+            dateInput.classList.remove('is-invalid');
+            timeInput.classList.remove('is-invalid');
+            return true;
+        }
+    }
+});
+</script>
 
 <?php require_once __DIR__ . '/includes/footer.php'; ?>
