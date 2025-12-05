@@ -124,15 +124,25 @@ $journeys = $conn->query("
     GROUP BY j.idJourney
     ORDER BY j.depDate DESC, j.depTime DESC
 ")->fetch_all(MYSQLI_ASSOC);
-
-require_once __DIR__ . '/includes/header.php';
 ?>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Admin - Journeys Management</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="includes/styles.css">
+</head>
+<body>
+<?php include __DIR__ . '/includes/navbar.php'; ?>
 
-<div class="container-fluid">
+<div class="container-fluid mt-0">
     <div class="row">
         <!-- Sidebar -->
-        <nav class="col-md-3 col-lg-2 d-md-block bg-light sidebar">
-            <div class="position-sticky pt-3">
+        <nav class="col-md-3 col-lg-2 d-md-block bg-light sidebar-admin">
+            <div class="sidebar-sticky pt-3">
                 <h6 class="sidebar-heading px-3 mt-4 mb-1 text-muted">
                     <span>Admin Panel</span>
                 </h6>
@@ -489,82 +499,50 @@ require_once __DIR__ . '/includes/header.php';
 </div>
 
 <style>
-.sidebar {
-    position: fixed;
-    top: 0;
-    bottom: 0;
-    left: 0;
-    z-index: 100;
-    padding: 48px 0 0;
-    box-shadow: inset -1px 0 0 rgba(0, 0, 0, .1);
+body {
+    padding-top: 0;
 }
 
-.sidebar .nav-link {
+.sidebar-admin {
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    padding-top: 1rem;
+    box-shadow: inset -1px 0 0 rgba(0, 0, 0, .1);
+    overflow-y: auto;
+    z-index: 1;
+}
+
+.sidebar-admin .nav-link {
     font-weight: 500;
     color: #333;
+    padding: 0.75rem 1rem;
 }
 
-.sidebar .nav-link.active {
+.sidebar-admin .nav-link.active {
     color: #0d6efd;
     background-color: rgba(13, 110, 253, 0.1);
 }
 
-.sidebar .nav-link:hover {
+.sidebar-admin .nav-link:hover {
     color: #0d6efd;
+    background-color: rgba(13, 110, 253, 0.05);
+}
+
+main.col-md-9 {
+    padding-top: 1rem;
+}
+
+.container-fluid {
+    padding-left: 0;
+    padding-right: 0;
+}
+
+.site-header {
+    z-index: 100;
 }
 </style>
 
-<script>
-// Validation de la date et l'heure pour le formulaire de création
-document.addEventListener('DOMContentLoaded', function() {
-    const form = document.getElementById('createJourneyForm');
-    const dateInput = document.getElementById('createDepDate');
-    const timeInput = document.getElementById('createDepTime');
-    
-    // Définir la date minimale à aujourd'hui
-    const today = new Date().toISOString().split('T')[0];
-    dateInput.setAttribute('min', today);
-    
-    // Validation en temps réel de la date
-    dateInput.addEventListener('change', function() {
-        validateDateTime();
-    });
-    
-    // Validation en temps réel de l'heure
-    timeInput.addEventListener('change', function() {
-        validateDateTime();
-    });
-    
-    // Validation avant soumission
-    form.addEventListener('submit', function(e) {
-        if (!validateDateTime()) {
-            e.preventDefault();
-            alert('Please select a date and time in the future!');
-        }
-    });
-    
-    function validateDateTime() {
-        const selectedDate = dateInput.value;
-        const selectedTime = timeInput.value;
-        
-        if (!selectedDate || !selectedTime) {
-            return true; // Laisser la validation HTML required gérer les champs vides
-        }
-        
-        const now = new Date();
-        const selected = new Date(selectedDate + 'T' + selectedTime);
-        
-        if (selected <= now) {
-            dateInput.classList.add('is-invalid');
-            timeInput.classList.add('is-invalid');
-            return false;
-        } else {
-            dateInput.classList.remove('is-invalid');
-            timeInput.classList.remove('is-invalid');
-            return true;
-        }
-    }
-});
-</script>
-
-<?php require_once __DIR__ . '/includes/footer.php'; ?>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

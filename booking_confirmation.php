@@ -7,15 +7,24 @@ if (!isset($_SESSION['user_cin'])) {
     exit();
 }
 
-// Récupérer l'ID de réservation depuis l'URL
-$bookingId = isset($_GET['id']) ? intval($_GET['id']) : 0;
+// Récupérer les IDs de réservation (soit depuis l'URL, soit toutes les récentes)
+$bookingIds = [];
 
-if ($bookingId <= 0) {
+if (isset($_GET['ids']) && !empty($_GET['ids'])) {
+    // Plusieurs IDs passés depuis checkout
+    $bookingIds = array_map('intval', explode(',', $_GET['ids']));
+} elseif (isset($_GET['id']) && intval($_GET['id']) > 0) {
+    // Un seul ID
+    $bookingIds = [intval($_GET['id'])];
+} else {
     header('Location: list_booking.php');
     exit();
 }
 
-// Récupérer les détails de la réservation
+// Récupérer les détails de toutes les réservations
+$placeholders = implode(',', array_fill(0, count($bookingIds), '?'));
+$types = str_repeat('i', count($bookingIds)) . 's';
+
 $query = $conn->prepare("
     SELECT 
         b.*,
@@ -33,43 +42,29 @@ $query = $conn->prepare("
     JOIN users u_passenger ON b.cinRequester = u_passenger.cin
     LEFT JOIN users u_driver ON j.cinRequester = u_driver.cin
     LEFT JOIN car ON j.immatCar = car.immat
-    WHERE b.idBooking = ? AND b.cinRequester = ?
+    WHERE b.idBooking IN ($placeholders) AND b.cinRequester = ?
+    ORDER BY b.idBooking ASC
 ");
 
-$query->bind_param("is", $bookingId, $_SESSION['user_cin']);
+$params = array_merge($bookingIds, [$_SESSION['user_cin']]);
+$query->bind_param($types, ...$params);
 $query->execute();
 $result = $query->get_result();
-$booking = $result->fetch_assoc();
+$bookings = $result->fetch_all(MYSQLI_ASSOC);
 $query->close();
 
-if (!$booking) {
+if (empty($bookings)) {
     header('Location: list_booking.php?error=Booking not found');
     exit();
 }
 
-// Préparer les données pour l'affichage et le PDF
-$bookingData = [
-    'booking_id' => $booking['idBooking'],
-    'passenger_name' => $booking['passenger_firstName'] . ' ' . $booking['passenger_lastName'],
-    'passenger_cin' => $booking['passenger_cin'],
-    'passenger_phone' => $booking['passenger_phone'],
-    'from' => $booking['dep_city'],
-    'to' => $booking['dest_city'],
-    'date' => $booking['depDate'],
-    'time' => substr($booking['depTime'], 0, 5),
-    'seats' => $booking['requestedSeats'],
-    'price_per_seat' => $booking['price'],
-    'total' => $booking['totalPrice'],
-    'driver_name' => $booking['driver_firstName'] . ' ' . $booking['driver_lastName'],
-    'driver_phone' => $booking['driver_phone'],
-    'car_model' => $booking['car_model'],
-    'car_immat' => $booking['car_immat']
-];
+// Calculer le total global
+$grandTotal = array_sum(array_column($bookings, 'totalPrice'));
 
 // Si demande de téléchargement PDF
 if (isset($_GET['download']) && $_GET['download'] === 'pdf') {
     require_once 'includes/pdf_helper.php';
-    downloadBookingPDF($bookingData);
+    downloadBookingsPDF($bookings, $grandTotal);
     exit();
 }
 ?>
@@ -89,19 +84,22 @@ if (isset($_GET['download']) && $_GET['download'] === 'pdf') {
         <div class="card-header bg-success text-white text-center py-4">
             <h2 class="mb-0">
                 <i class="fas fa-check-circle fs-1"></i><br>
-                Booking Confirmed!
+                Booking<?= count($bookings) > 1 ? 's' : '' ?> Confirmed!
             </h2>
-            <p class="mb-0 mt-2">Your journey has been successfully booked</p>
+            <p class="mb-0 mt-2">Your journey<?= count($bookings) > 1 ? 's have' : ' has' ?> been successfully booked</p>
         </div>
         
         <div class="card-body p-4">
+            <?php foreach ($bookings as $index => $booking): ?>
+            <?php if ($index > 0): ?><hr class="my-4"><?php endif; ?>
+            
             <!-- Code de réservation -->
             <div class="text-center mb-4 p-3 bg-light rounded">
-                <div class="text-muted small">Booking Reference</div>
+                <div class="text-muted small">Booking Reference <?= count($bookings) > 1 ? '#' . ($index + 1) : '' ?></div>
                 <div class="fs-4 font-monospace fw-bold text-primary">
-                    <?= strtoupper(substr(md5($bookingData['booking_id']), 0, 12)) ?>
+                    <?= strtoupper(substr(md5($booking['idBooking']), 0, 12)) ?>
                 </div>
-                <div class="small text-muted">Booking ID: #<?= $bookingData['booking_id'] ?></div>
+                <div class="small text-muted">Booking ID: #<?= $booking['idBooking'] ?></div>
             </div>
 
             <!-- Informations du voyage -->
@@ -113,30 +111,30 @@ if (isset($_GET['download']) && $_GET['download'] === 'pdf') {
                         </h5>
                         <div class="detail-item">
                             <span class="detail-label">From:</span>
-                            <span class="detail-value"><?= htmlspecialchars($bookingData['from']) ?></span>
+                            <span class="detail-value"><?= htmlspecialchars($booking['dep_city']) ?></span>
                         </div>
                         <div class="detail-item">
                             <span class="detail-label">To:</span>
-                            <span class="detail-value"><?= htmlspecialchars($bookingData['to']) ?></span>
+                            <span class="detail-value"><?= htmlspecialchars($booking['dest_city']) ?></span>
                         </div>
                         <div class="detail-item">
                             <span class="detail-label">Date:</span>
                             <span class="detail-value">
                                 <i class="fas fa-calendar me-1"></i>
-                                <?= date('d/m/Y', strtotime($bookingData['date'])) ?>
+                                <?= date('d/m/Y', strtotime($booking['depDate'])) ?>
                             </span>
                         </div>
                         <div class="detail-item">
                             <span class="detail-label">Time:</span>
                             <span class="detail-value">
                                 <i class="fas fa-clock me-1"></i>
-                                <?= $bookingData['time'] ?>
+                                <?= substr($booking['depTime'], 0, 5) ?>
                             </span>
                         </div>
                         <div class="detail-item">
                             <span class="detail-label">Seats:</span>
                             <span class="detail-value">
-                                <span class="badge bg-info"><?= $bookingData['seats'] ?> seat(s)</span>
+                                <span class="badge bg-info"><?= $booking['requestedSeats'] ?> seat(s)</span>
                             </span>
                         </div>
                     </div>
@@ -149,51 +147,76 @@ if (isset($_GET['download']) && $_GET['download'] === 'pdf') {
                         </h5>
                         <div class="detail-item">
                             <span class="detail-label">Name:</span>
-                            <span class="detail-value"><?= htmlspecialchars($bookingData['driver_name']) ?></span>
+                            <span class="detail-value"><?= htmlspecialchars($booking['driver_firstName'] . ' ' . $booking['driver_lastName']) ?></span>
                         </div>
                         <div class="detail-item">
                             <span class="detail-label">Phone:</span>
                             <span class="detail-value">
-                                <a href="tel:<?= htmlspecialchars($bookingData['driver_phone']) ?>" class="text-decoration-none">
+                                <a href="tel:<?= htmlspecialchars($booking['driver_phone']) ?>" class="text-decoration-none">
                                     <i class="fas fa-phone me-1"></i>
-                                    <?= htmlspecialchars($bookingData['driver_phone']) ?>
+                                    <?= htmlspecialchars($booking['driver_phone']) ?>
                                 </a>
                             </span>
                         </div>
-                        <?php if ($bookingData['car_model']): ?>
+                        <?php if ($booking['car_model']): ?>
                         <div class="detail-item">
                             <span class="detail-label">Car:</span>
                             <span class="detail-value">
                                 <i class="fas fa-car me-1"></i>
-                                <?= htmlspecialchars($bookingData['car_model']) ?>
+                                <?= htmlspecialchars($booking['car_model']) ?>
                             </span>
                         </div>
                         <?php endif; ?>
-                        <?php if ($bookingData['car_immat']): ?>
+                        <?php if ($booking['car_immat']): ?>
                         <div class="detail-item">
                             <span class="detail-label">Plate:</span>
-                            <span class="detail-value"><?= htmlspecialchars($bookingData['car_immat']) ?></span>
+                            <span class="detail-value"><?= htmlspecialchars($booking['car_immat']) ?></span>
                         </div>
                         <?php endif; ?>
                     </div>
                 </div>
             </div>
 
-            <!-- Résumé du paiement -->
-            <div class="payment-summary">
-                <h5 class="section-title">
-                    <i class="fas fa-money-bill-wave text-warning"></i> Payment Summary
-                </h5>
+            <!-- Résumé du paiement pour cette réservation -->
+            <div class="payment-summary-item">
                 <div class="d-flex justify-content-between mb-2">
-                    <span><?= $bookingData['seats'] ?> seat(s) × <?= $bookingData['price_per_seat'] ?> DT</span>
-                    <span><?= $bookingData['total'] ?> DT</span>
+                    <span><?= $booking['requestedSeats'] ?> seat(s) × <?= $booking['price'] ?> DT</span>
+                    <span class="fw-bold"><?= $booking['totalPrice'] ?> DT</span>
                 </div>
+            </div>
+            
+            <?php endforeach; ?>
+
+            <!-- Total global si plusieurs réservations -->
+            <?php if (count($bookings) > 1): ?>
+            <div class="payment-summary mt-4">
+                <h5 class="section-title">
+                    <i class="fas fa-money-bill-wave text-warning"></i> Total Payment Summary
+                </h5>
+                <?php foreach ($bookings as $index => $booking): ?>
+                <div class="d-flex justify-content-between mb-2 small">
+                    <span>Booking #<?= ($index + 1) ?>: <?= htmlspecialchars($booking['dep_city']) ?> → <?= htmlspecialchars($booking['dest_city']) ?></span>
+                    <span><?= $booking['totalPrice'] ?> DT</span>
+                </div>
+                <?php endforeach; ?>
                 <hr>
                 <div class="d-flex justify-content-between fs-4 fw-bold text-success">
                     <span>TOTAL PAID:</span>
-                    <span><?= $bookingData['total'] ?> DT</span>
+                    <span><?= $grandTotal ?> DT</span>
                 </div>
             </div>
+            <?php else: ?>
+            <div class="payment-summary mt-4">
+                <h5 class="section-title">
+                    <i class="fas fa-money-bill-wave text-warning"></i> Payment Summary
+                </h5>
+                <hr>
+                <div class="d-flex justify-content-between fs-4 fw-bold text-success">
+                    <span>TOTAL PAID:</span>
+                    <span><?= $grandTotal ?> DT</span>
+                </div>
+            </div>
+            <?php endif; ?>
 
             <!-- Instructions importantes -->
             <div class="alert alert-warning mt-4">
@@ -210,7 +233,7 @@ if (isset($_GET['download']) && $_GET['download'] === 'pdf') {
 
             <!-- Boutons d'action -->
             <div class="text-center mt-4">
-                <a href="booking_confirmation.php?id=<?= $bookingData['booking_id'] ?>&download=pdf" 
+                <a href="booking_confirmation.php?ids=<?= implode(',', array_column($bookings, 'idBooking')) ?>&download=pdf" 
                    class="btn btn-danger btn-lg me-2" target="_blank" 
                    title="Open printable version in new tab">
                     <i class="fas fa-print"></i> Print / Save as PDF
@@ -285,6 +308,13 @@ if (isset($_GET['download']) && $_GET['download'] === 'pdf') {
     padding: 25px;
     border-radius: 10px;
     border: 2px solid #dee2e6;
+}
+
+.payment-summary-item {
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border: 1px solid #e9ecef;
 }
 
 @media print {

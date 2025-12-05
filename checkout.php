@@ -60,7 +60,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 $bookingManager = new BookingManager($conn);
 $messages = [];
 $successCount = 0;
-$lastBookingId = null;
+$allBookingIds = [];
 
 $conn->begin_transaction();
 try {
@@ -106,8 +106,8 @@ try {
         $booking = new Booking($idJourney, $cinRequester, $requestedSeats, $totalPrice);
         $bookingId = $bookingManager->addBooking($booking);
         
-        // Stocker le dernier ID de réservation pour la redirection
-        $lastBookingId = $bookingId;
+        // Ajouter l'ID de réservation au tableau
+        $allBookingIds[] = $bookingId;
 
         // Mettre à jour les places
         $bookingManager->updateAvailableSeats($idJourney, $requestedSeats);
@@ -120,9 +120,9 @@ try {
     $conn->commit();
     if ($successCount > 0) {
         unset($_SESSION['cart']);
-        // Rediriger vers la page de confirmation avec le dernier ID de réservation
-        if ($lastBookingId) {
-            header('Location: booking_confirmation.php?id=' . $lastBookingId);
+        // Rediriger vers la page de confirmation avec tous les IDs de réservation
+        if (!empty($allBookingIds)) {
+            header('Location: booking_confirmation.php?ids=' . implode(',', $allBookingIds));
         } else {
             header('Location: list_booking.php?success=1');
         }

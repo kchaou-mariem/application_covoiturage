@@ -63,6 +63,23 @@ $stmt->close();
 ?>
 
 <?php include __DIR__ . '/includes/header.php'; ?>
+        <!-- Messages de succès/erreur -->
+        <?php if (isset($_SESSION['success'])): ?>
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                <i class="fas fa-check-circle"></i> <?php echo htmlspecialchars($_SESSION['success']); ?>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            <?php unset($_SESSION['success']); ?>
+        <?php endif; ?>
+        
+        <?php if (isset($_SESSION['error'])): ?>
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <i class="fas fa-exclamation-circle"></i> <?php echo htmlspecialchars($_SESSION['error']); ?>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            <?php unset($_SESSION['error']); ?>
+        <?php endif; ?>
+
         <div class="header">
             <h1>🎫 My Bookings</h1>
             <p>Check your booking history and upcoming trips</p>
@@ -124,6 +141,9 @@ $stmt->close();
                                 <a href="booking_confirmation.php?id=<?php echo $booking['idBooking']; ?>" class="btn-view">
                                     <i class="fas fa-file-invoice"></i> View Confirmation
                                 </a>
+                                <button onclick="showCancelModal(<?php echo $booking['idBooking']; ?>, '<?php echo htmlspecialchars($booking['departure_city'], ENT_QUOTES); ?>', '<?php echo htmlspecialchars($booking['destination_city'], ENT_QUOTES); ?>', '<?php echo date('d/m/Y', strtotime($booking['depDate'])); ?>', <?php echo $booking['requestedSeats']; ?>)" class="btn-cancel">
+                                    <i class="fas fa-times-circle"></i> Cancel
+                                </button>
                             </div>
                             
                         </div>
@@ -195,6 +215,54 @@ $stmt->close();
         </div>
     </div>
 
+    <!-- Modal de confirmation d'annulation -->
+    <div class="modal fade" id="cancelModal" tabindex="-1" aria-labelledby="cancelModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title" id="cancelModalLabel">
+                        <i class="fas fa-exclamation-triangle me-2"></i>Cancel Booking
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="text-center mb-3">
+                        <i class="fas fa-times-circle text-danger" style="font-size: 4rem; opacity: 0.8;"></i>
+                    </div>
+                    <h6 class="text-center mb-3">Are you sure you want to cancel this booking?</h6>
+                    
+                    <div class="booking-summary p-3 bg-light rounded">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="fw-bold"><i class="fas fa-route me-2 text-primary"></i>Route:</span>
+                            <span id="modal-route"></span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="fw-bold"><i class="fas fa-calendar me-2 text-primary"></i>Date:</span>
+                            <span id="modal-date"></span>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <span class="fw-bold"><i class="fas fa-chair me-2 text-primary"></i>Seats:</span>
+                            <span id="modal-seats"></span>
+                        </div>
+                    </div>
+                    
+                    <div class="alert alert-warning mt-3 mb-0">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <small>The seats will be released and made available for other passengers.</small>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-arrow-left me-1"></i>Keep Booking
+                    </button>
+                    <button type="button" class="btn btn-danger" id="confirmCancelBtn">
+                        <i class="fas fa-trash-alt me-1"></i>Yes, Cancel Booking
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const cards = document.querySelectorAll('.booking-card');
@@ -208,6 +276,24 @@ $stmt->close();
                     card.style.transform = 'translateY(0)';
                 }, index * 100);
             });
+        });
+        
+        let currentBookingId = null;
+        
+        function showCancelModal(bookingId, fromCity, toCity, date, seats) {
+            currentBookingId = bookingId;
+            document.getElementById('modal-route').textContent = fromCity + ' → ' + toCity;
+            document.getElementById('modal-date').textContent = date;
+            document.getElementById('modal-seats').textContent = seats + ' seat(s)';
+            
+            const modal = new bootstrap.Modal(document.getElementById('cancelModal'));
+            modal.show();
+        }
+        
+        document.getElementById('confirmCancelBtn').addEventListener('click', function() {
+            if (currentBookingId) {
+                window.location.href = 'delete_booking.php?id=' + currentBookingId;
+            }
         });
     </script>
 
