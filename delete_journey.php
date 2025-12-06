@@ -46,8 +46,8 @@ try {
     require_once 'Manager/CityManager.php';
     $cityManager = new CityManager($conn);
     
-    $depCity = $cityManager->findById($journey->getDeparture());
-    $destCity = $cityManager->findById($journey->getDestination());
+    $depCity = $cityManager->read($journey->getDeparture());
+    $destCity = $cityManager->read($journey->getDestination());
     
     $journeyDetails = [
         'from' => $depCity ? $depCity->getName() : 'Unknown',

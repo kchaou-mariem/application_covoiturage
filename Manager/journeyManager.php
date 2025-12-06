@@ -237,6 +237,11 @@ class JourneyManager {
             $data['preferences']
         );
 
+        // ✅ Set cinRequester from database
+        if (isset($data['cinRequester'])) {
+            $journey->setCinRequester($data['cinRequester']);
+        }
+
         if (isset($data['departure_city_name'])) $journey->departure_city_name = $data['departure_city_name'];
         if (isset($data['destination_city_name'])) $journey->destination_city_name = $data['destination_city_name'];
         if (isset($data['departure_delegation_name'])) $journey->departure_delegation_name = $data['departure_delegation_name'];

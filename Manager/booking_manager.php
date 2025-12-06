@@ -28,6 +28,24 @@ class BookingManager {
     }
 
     /**
+     * ✅ Calculate total seats booked for a journey
+     */
+    public function getTotalSeatsBooked($idJourney) {
+        $sql = "SELECT SUM(requestedSeats) AS totalSeats FROM booking WHERE idJourney = ?";
+        $stmt = $this->conn->prepare($sql);
+        if (!$stmt) throw new Exception('DB prepare failed: ' . $this->conn->error);
+        $stmt->bind_param('i', $idJourney);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $totalSeats = 0;
+        if ($row = $result->fetch_assoc()) {
+            $totalSeats = (int)($row['totalSeats'] ?? 0);
+        }
+        $stmt->close();
+        return $totalSeats;
+    }
+
+    /**
      * Get bookings for a specific journey with requester contact info
      * Returns an array of arrays with keys: 'booking' (Booking object) and 'user' (assoc with firstName,lastName,email,phone,cin)
      */

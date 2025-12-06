@@ -38,10 +38,15 @@ $journeys = $journeyManager->findByRequester($cin);
                 <p class="mb-1"><strong>Available seats:</strong> <?= $journey->getNbSeats() ?></p>
                 <p class="mb-1"><strong>Price:</strong> <?= number_format($journey->getPrice(), 2) ?> DT</p>
 
-                <?php $bookings = $bookingManager->countBookingsForJourney($journey->getIdJourney()); ?>
+                <?php 
+                $bookings = $bookingManager->countBookingsForJourney($journey->getIdJourney()); 
+                $seatsBooked = $bookingManager->getTotalSeatsBooked($journey->getIdJourney());
+                ?>
 
                 <?php if ($bookings > 0): ?>
-                  <div class="alert alert-warning small">This journey has <?= $bookings ?> booking(s) — deletion is not possible while bookings exist.</div>
+                  <div class="alert alert-warning small">
+                    ⚠️ <strong><?= $bookings ?> booking(s)</strong> occupying <strong><?= $seatsBooked ?> seat(s)</strong> — deletion requires all reservations to be cancelled.
+                  </div>
                   <?php $bookingRows = $bookingManager->getBookingsForJourney($journey->getIdJourney()); ?>
                   <div class="mt-2">
                     <div class="fw-bold mb-1">Contact requesters to ask them to cancel their bookings:</div>
